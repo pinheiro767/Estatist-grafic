@@ -1,6 +1,7 @@
 {
   "name": "Lab Científico PIBIC PRO",
   "short_name": "Lab PIBIC",
+  "description": "Ferramentas estatísticas para iniciação científica",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0d1117",
@@ -8,14 +9,16 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://via.placeholder.com/192",
+      "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "https://via.placeholder.com/512",
+      "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
