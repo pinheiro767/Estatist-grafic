@@ -1,0 +1,2730 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d1117">
+  <title>Lab Científico PIBIC PRO</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --accent3: #f78166;
+      --accent4: #d2a8ff;
+      --text: #e6edf3;
+      --muted: #7d8590;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      overflow-x: hidden;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .app-wrapper {
+      width: 100%;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Tabs */
+    .tab-btn {
+      padding: 8px 18px;
+      border-radius: 6px 6px 0 0;
+      border: 1px solid transparent;
+      border-bottom: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: var(--text); background: var(--surface2); }
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--accent);
+      border-color: var(--border);
+      border-bottom-color: var(--surface);
+    }
+
+    /* Textarea & Input */
+    textarea, input[type="number"], select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      padding: 10px 12px;
+      width: 100%;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    textarea:focus, input[type="number"]:focus, select:focus {
+      border-color: var(--accent);
+    }
+    textarea::placeholder { color: var(--muted); }
+
+    /* Buttons */
+    .btn-primary {
+      background: var(--accent);
+      color: #0d1117;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 24px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-family: 'Sora', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+
+    /* Result cards */
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+    }
+    .result-card.highlight { border-color: var(--accent); }
+    .result-card.success { border-color: var(--accent2); }
+    .result-card.warning { border-color: var(--accent3); }
+    .result-card.purple { border-color: var(--accent4); }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .stat-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      text-align: center;
+    }
+    .stat-box .val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-box .lbl {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+    .data-table th {
+      background: var(--surface2);
+      color: var(--muted);
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-weight: 500;
+      font-family: 'Sora', sans-serif;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .data-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: var(--surface2); }
+
+    /* Sig badge */
+    .sig-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .sig-badge.sig { background: #1a4a2a; color: var(--accent2); }
+    .sig-badge.not-sig { background: #3a2020; color: var(--accent3); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Chip */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .chip.active { border-color: var(--accent2); color: var(--accent2); background: #1a4a2a22; }
+
+    /* Error */
+    .error-box {
+      background: #3a201522;
+      border: 1px solid var(--accent3);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: var(--accent3);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Annotation line */
+    .annotation {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* Panel */
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+
+    /* Progress bar (effect size) */
+    .progress-bar-bg {
+      height: 8px;
+      border-radius: 4px;
+      background: var(--surface2);
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--accent4));
+      transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="app-wrapper">
+   <!-- Header -->
+   <header style="background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; flex-wrap: wrap; gap: 12px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+     <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#58a6ff,#d2a8ff);display:flex;align-items:center;justify-content:center;">
+      <i data-lucide="beaker" style="width:18px;height:18px;color:#0d1117;"></i>
+     </div>
+     <div>
+      <h1 id="app-title" style="font-size:16px;font-weight:700;margin:0;line-height:1;">Lab Científico PIBIC PRO + Stats</h1>
+      <p style="font-size:11px;color:var(--muted);margin:0;line-height:1.4;">Engajamento · ANOVA · IC 95% · Regressão</p>
+     </div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+     <span class="chip active"><i data-lucide="check" style="width:10px;height:10px;"></i> PIBIC</span> <span class="chip active"><i data-lucide="check" style="width:10px;height:10px;"></i> p-valor real</span> <span class="chip active"><i data-lucide="check" style="width:10px;height:10px;"></i> Post-hoc</span>
+     <div style="display:flex;gap:4px;flex-wrap:wrap;">
+      <button class="btn-ghost" id="install-btn" onclick="installPWA()" style="display:none;align-items:center;gap:4px;"><i data-lucide="download-cloud" style="width:12px;height:12px;"></i> Instalar</button> <button class="btn-ghost" onclick="exportarPDF()" style="display:flex;align-items:center;gap:4px;"><i data-lucide="file-pdf" style="width:12px;height:12px;"></i> PDF</button> <button class="btn-ghost" onclick="exportarExcel()" style="display:flex;align-items:center;gap:4px;"><i data-lucide="sheet" style="width:12px;height:12px;"></i> Excel</button> <button class="btn-ghost" onclick="downloadAppZIP()" style="display:flex;align-items:center;gap:4px;"><i data-lucide="package" style="width:12px;height:12px;"></i> Baixar</button>
+     </div>
+    </div>
+   </header><!-- Main content -->
+   <main style="flex:1;padding:20px 24px;overflow-y:auto;">
+    <!-- Tabs -->
+    <div style="display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto;">
+     <button class="tab-btn active" onclick="switchTab('dashboard')" id="tab-dashboard">📊 Dashboard</button> <button class="tab-btn" onclick="switchTab('instagram')" id="tab-instagram">📱 Instagram</button> <button class="tab-btn" onclick="switchTab('geral')" id="tab-geral">📈 Análise Geral</button> <button class="tab-btn" onclick="switchTab('anova')" id="tab-anova">ANOVA</button> <button class="tab-btn" onclick="switchTab('ic')" id="tab-ic">IC 95%</button> <button class="tab-btn" onclick="switchTab('regression')" id="tab-regression">Regressão</button> <button class="tab-btn" onclick="switchTab('manual')" id="tab-manual">📚 Manual</button>
+    </div><!-- ============ DASHBOARD TAB ============ -->
+    <div id="panel-dashboard">
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="panel">
+       <h2 style="font-size:14px;font-weight:600;margin:0 0 14px 0;">Novo Registro (PIBIC)</h2>
+       <div style="margin-bottom:10px;">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Tipo de Post</label> <select id="tipo" style="margin:0;"><option>Reel</option><option>Carrossel</option><option>Story</option><option>Estático</option></select>
+       </div>
+       <div style="margin-bottom:10px;">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Tema</label> <select id="tema" style="margin:0;"><option>IST</option><option>Prevenção</option><option>Autocuidado</option><option>Saúde Reprodutiva</option><option>Educação</option></select>
+       </div>
+       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div><input type="number" id="curtidas" placeholder="Curtidas">
+        </div>
+        <div><input type="number" id="comentarios" placeholder="Comentários">
+        </div>
+        <div><input type="number" id="comp" placeholder="Compartilhamentos">
+        </div>
+        <div><input type="number" id="salvos" placeholder="Salvos">
+        </div>
+        <div><input type="number" id="visualizacoes" placeholder="Visualizações">
+        </div>
+        <div><input type="number" id="impressoes" placeholder="Impressões">
+        </div>
+       </div>
+       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div><input type="number" id="alcance" placeholder="Alcance">
+        </div><select id="dispositivo" style="margin:0;"><option>Todos</option><option>Mobile</option><option>Desktop</option><option>Tablet</option></select>
+       </div>
+       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button class="btn-primary" onclick="addPibicRecord()" style="width:100%;"><span style="display:flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="plus" style="width:14px;height:14px;"></i> Adicionar</span></button> <button class="btn-primary" onclick="updateDashboard()" style="width:100%;background:linear-gradient(135deg,#8b5cf6,#d946ef);"><span style="display:flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Gerar</span></button>
+       </div>
+       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+        <button class="btn-ghost" onclick="exportarPDFDashboard()" style="display:flex;align-items:center;justify-content:center;gap:4px;width:100%;"><i data-lucide="file-pdf" style="width:12px;height:12px;"></i> PDF</button> <button class="btn-ghost" onclick="exportarExcelDashboard()" style="display:flex;align-items:center;justify-content:center;gap:4px;width:100%;"><i data-lucide="sheet" style="width:12px;height:12px;"></i> Excel</button>
+       </div>
+      </div>
+      <div>
+       <div class="result-card" style="margin-bottom:12px;">
+        <p style="font-size:12px;color:var(--muted);margin:0 0 8px 0;">Estatísticas</p>
+        <div class="stat-grid">
+         <div class="stat-box">
+          <div class="val" id="mean-stat">
+           -
+          </div>
+          <div class="lbl">
+           Média (%)
+          </div>
+         </div>
+         <div class="stat-box">
+          <div class="val" id="std-stat">
+           -
+          </div>
+          <div class="lbl">
+           DP
+          </div>
+         </div>
+         <div class="stat-box">
+          <div class="val" id="cv-stat">
+           -
+          </div>
+          <div class="lbl">
+           CV (%)
+          </div>
+         </div>
+         <div class="stat-box">
+          <div class="val" id="median-stat">
+           -
+          </div>
+          <div class="lbl">
+           Mediana
+          </div>
+         </div>
+        </div>
+       </div>
+       <div class="result-card" style="margin-bottom:12px;background:transparent;border-style:dashed;">
+        <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;">Total de registros</p>
+        <p class="mono" style="font-size:24px;color:var(--accent2);margin:0;" id="total-records">0</p>
+       </div><button class="btn-ghost" onclick="exportarCSV()" style="width:100%;margin-bottom:6px;"><i data-lucide="download" style="width:12px;height:12px;"></i> CSV</button> <button class="btn-ghost" onclick="exportarPDF()" style="width:100%;"><i data-lucide="file-pdf" style="width:12px;height:12px;"></i> PDF</button>
+      </div>
+     </div>
+     <div class="result-card" style="margin-bottom:16px;">
+      <h3 style="font-size:13px;font-weight:600;margin:0 0 12px 0;">Gráficos</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;">
+       <canvas id="chart-engagement" style="max-height:250px;"></canvas>
+       <canvas id="chart-by-type" style="max-height:250px;"></canvas>
+       <canvas id="chart-by-theme" style="max-height:250px;"></canvas>
+       <canvas id="chart-interactions" style="max-height:250px;"></canvas>
+       <canvas id="chart-device" style="max-height:250px;"></canvas>
+       <canvas id="chart-views" style="max-height:250px;"></canvas>
+      </div>
+     </div>
+     <div class="result-card">
+      <h3 style="font-size:13px;font-weight:600;margin:0 0 12px 0;">Resultado</h3>
+      <pre id="dashboard-result" style="font-size:12px;margin:0;max-height:200px;overflow-y:auto;">Adicione dados e clique em "Gerar" para análise</pre>
+     </div>
+    </div>
+    <div id="panel-instagram" style="display:none;">
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="panel">
+       <h2 style="font-size:14px;font-weight:600;margin:0 0 14px 0;">📱 Instagram Post</h2>
+       <div style="margin-bottom:10px;">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Tipo</label> <select id="ig-tipo" style="margin:0;"><option>Reel</option><option>Carrossel</option><option>Story</option><option>Estático</option></select>
+       </div>
+       <div style="margin-bottom:10px;">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Tema</label> <select id="ig-tema" style="margin:0;"><option>IST</option><option>Prevenção</option><option>Autocuidado</option><option>Saúde Reprodutiva</option><option>Educação</option></select>
+       </div>
+       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div>
+         <input type="number" id="ig-curtidas" placeholder="Curtidas" min="0">
+        </div>
+        <div>
+         <input type="number" id="ig-comentarios" placeholder="Comentários" min="0">
+        </div>
+        <div>
+         <input type="number" id="ig-comp" placeholder="Compartilhamentos" min="0">
+        </div>
+        <div>
+         <input type="number" id="ig-salvos" placeholder="Salvos" min="0">
+        </div>
+       </div>
+       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div>
+         <input type="number" id="ig-alcance" placeholder="Alcance" min="1">
+        </div>
+        <div>
+         <select id="ig-dispositivo" style="margin:0;"><option>Mobile</option><option>Desktop</option><option>Tablet</option><option>Todos</option></select>
+        </div>
+       </div>
+       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button class="btn-primary" onclick="addInstagramRecord()" style="width:100%;"><span style="display:flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="plus" style="width:14px;height:14px;"></i> Adicionar</span></button> <button class="btn-primary" onclick="loadSampleInstagram()" style="width:100%;background:linear-gradient(135deg,#f78166,#d2a8ff);"><span style="display:flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="zap" style="width:14px;height:14px;"></i> Exemplo</span></button>
+       </div>
+      </div>
+      <div class="result-card" style="margin-bottom:12px;">
+       <p style="font-size:12px;color:var(--muted);margin:0 0 8px 0;">Estatísticas Instagram</p>
+       <div class="stat-grid">
+        <div class="stat-box">
+         <div class="val" id="ig-media-stat">
+          -
+         </div>
+         <div class="lbl">
+          Média (%)
+         </div>
+        </div>
+        <div class="stat-box">
+         <div class="val" id="ig-count-stat">
+          0
+         </div>
+         <div class="lbl">
+          Posts
+         </div>
+        </div>
+        <div class="stat-box">
+         <div class="val" id="ig-melhor-stat">
+          -
+         </div>
+         <div class="lbl">
+          Melhor
+         </div>
+        </div>
+        <div class="stat-box">
+         <div class="val" id="ig-pior-stat">
+          -
+         </div>
+         <div class="lbl">
+          Pior
+         </div>
+        </div>
+       </div><button class="btn-ghost" onclick="updateInstagram()" style="width:100%;margin-top:12px;"><i data-lucide="refresh-cw" style="width:12px;height:12px;"></i> Gerar Gráficos</button>
+      </div>
+     </div>
+     <div class="result-card" style="margin-bottom:16px;">
+      <h3 style="font-size:13px;font-weight:600;margin:0 0 12px 0;">Gráficos Instagram</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;">
+       <canvas id="ig-chart-engagement" style="max-height:250px;"></canvas>
+       <canvas id="ig-chart-by-type" style="max-height:250px;"></canvas>
+       <canvas id="ig-chart-by-theme" style="max-height:250px;"></canvas>
+       <canvas id="ig-chart-interactions" style="max-height:250px;"></canvas>
+      </div>
+     </div>
+    </div>
+    <div id="panel-geral" style="display:none;">
+     <div style="display:grid;grid-template-columns:1fr;gap:16px;">
+      <div class="result-card highlight">
+       <h2 style="font-size:14px;font-weight:600;margin:0 0 12px 0;display:flex;align-items:center;gap:8px;"><i data-lucide="trending-up" style="width:18px;height:18px;color:var(--accent);"></i> Análise Geral Consolidada</h2>
+       <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.8;">Visualize métricas agregadas de todos os dados coletados. Clique em "Gerar Análise" para atualizar os gráficos e estatísticas.</p><button class="btn-primary" onclick="generateGeralAnalysis()" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#22c55e,#16a34a);"><span style="display:flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Gerar Análise</span></button>
+      </div>
+      <div class="result-card" style="margin-bottom:12px;">
+       <p style="font-size:12px;color:var(--muted);margin:0 0 12px 0;">Estatísticas Gerais</p>
+       <div class="stat-grid">
+        <div class="stat-box">
+         <div class="val" id="geral-total">
+          0
+         </div>
+         <div class="lbl">
+          Total Posts
+         </div>
+        </div>
+        <div class="stat-box">
+         <div class="val" id="geral-media">
+          -
+         </div>
+         <div class="lbl">
+          Engaj. Médio
+         </div>
+        </div>
+        <div class="stat-box">
+         <div class="val" id="geral-total-int">
+          0
+         </div>
+         <div class="lbl">
+          Total Inter.
+         </div>
+        </div>
+        <div class="stat-box">
+         <div class="val" id="geral-total-alcance">
+          0
+         </div>
+         <div class="lbl">
+          Alcance Total
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="result-card" style="margin-bottom:16px;">
+       <h3 style="font-size:13px;font-weight:600;margin:0 0 12px 0;">Gráficos de Análise Geral</h3>
+       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;">
+        <canvas id="geral-chart-main" style="max-height:250px;"></canvas>
+        <canvas id="geral-chart-sources" style="max-height:250px;"></canvas>
+        <canvas id="geral-chart-timeline" style="max-height:250px;"></canvas>
+        <canvas id="geral-chart-distribution" style="max-height:250px;"></canvas>
+       </div>
+      </div>
+      <div class="result-card">
+       <h3 style="font-size:13px;font-weight:600;margin:0 0 12px 0;">Resumo Executivo</h3>
+       <pre id="geral-summary" style="font-size:12px;margin:0;max-height:300px;overflow-y:auto;font-family:JetBrains Mono;">Clique em "Gerar Análise" para gerar relatório</pre>
+      </div>
+     </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+     <!-- Group inputs -->
+     <div class="panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+       <h2 style="font-size:14px;font-weight:600;margin:0;">Grupos</h2><button class="btn-ghost" onclick="addGroup()" style="display:flex;align-items:center;gap:4px;"> <i data-lucide="plus" style="width:12px;height:12px;"></i> Grupo </button>
+      </div>
+      <div id="group-container"></div>
+      <div style="margin-top:12px;">
+       <button class="btn-primary" onclick="runAnova()" style="width:100%;"> <span style="display:flex;align-items:center;justify-content:center;gap:6px;"> <i data-lucide="play" style="width:14px;height:14px;"></i> Calcular ANOVA </span> </button>
+      </div>
+     </div><!-- Quick info -->
+     <div>
+      <div class="result-card" style="margin-bottom:12px;">
+       <p style="font-size:12px;color:var(--muted);margin:0 0 8px 0;">Como inserir dados</p>
+       <p style="font-size:12px;color:var(--text);margin:0;line-height:1.7;">• Separe valores por vírgula, espaço ou Enter<br>
+         • Mínimo 2 grupos, 2 valores cada<br>
+         • Use ponto para decimais: <span class="mono" style="color:var(--accent);">3.14</span></p>
+      </div>
+      <div class="result-card" style="margin-bottom:12px;background:transparent;border-style:dashed;">
+       <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;">Fórmula F</p>
+       <p class="mono" style="font-size:14px;color:var(--accent4);margin:0;">F = MS<sub>entre</sub> / MS<sub>dentro</sub></p>
+      </div>
+      <div id="anova-quick-stats"></div>
+     </div>
+    </div><!-- Results -->
+    <div id="anova-results"></div>
+    <div id="panel-ic" style="display:none;">
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="panel">
+       <h2 style="font-size:14px;font-weight:600;margin:0 0 14px 0;">Dados para IC 95%</h2>
+       <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;" for="ic-data">Valores da amostra</label> <textarea id="ic-data" rows="6" placeholder="Ex: 23, 31, 28, 25, 19, 34, 27, 22, 30, 26"></textarea>
+       </div>
+       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div>
+         <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;" for="ic-confidence">Nível de confiança (%)</label> <input type="number" id="ic-confidence" value="95" min="80" max="99.9" step="0.1">
+        </div>
+        <div>
+         <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;" for="ic-sigma">σ pop. conhecida (opt.)</label> <input type="number" id="ic-sigma" placeholder="deixe em branco" step="any">
+        </div>
+       </div><button class="btn-primary" onclick="runIC()" style="width:100%;"> <span style="display:flex;align-items:center;justify-content:center;gap:6px;"> <i data-lucide="target" style="width:14px;height:14px;"></i> Calcular IC </span> </button>
+      </div>
+      <div id="ic-results"></div>
+     </div>
+    </div><!-- ============ REGRESSION TAB ============ -->
+    <div id="panel-regression" style="display:none;">
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="panel">
+       <h2 style="font-size:14px;font-weight:600;margin:0 0 14px 0;">Dados para Regressão Linear</h2>
+       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div>
+         <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;" for="reg-x">Variável X (preditora)</label> <textarea id="reg-x" rows="6" placeholder="1, 2, 3, 4, 5"></textarea>
+        </div>
+        <div>
+         <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;" for="reg-y">Variável Y (resposta)</label> <textarea id="reg-y" rows="6" placeholder="2.1, 4.3, 5.8, 8.2, 9.7"></textarea>
+        </div>
+       </div>
+       <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;" for="reg-predict">Prever Y para X =</label> <input type="number" id="reg-predict" placeholder="Ex: 6" step="any">
+       </div><button class="btn-primary" onclick="runRegression()" style="width:100%;"> <span style="display:flex;align-items:center;justify-content:center;gap:6px;"> <i data-lucide="trending-up" style="width:14px;height:14px;"></i> Calcular Regressão </span> </button>
+      </div>
+      <div id="regression-results"></div>
+     </div>
+     <div id="regression-table-area"></div>
+    </div>
+   </main>
+  </div><!-- ============ MANUAL TAB ============ -->
+  <div id="panel-manual" style="display:none;">
+   <div style="display:grid;grid-template-columns:1fr;gap:16px;"><!-- Glossário -->
+    <div class="result-card highlight">
+     <h2 style="font-size:16px;font-weight:700;margin:0 0 14px 0;display:flex;align-items:center;gap:8px;"><i data-lucide="book" style="width:20px;height:20px;color:var(--accent);"></i> Manual de Estatística</h2>
+     <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.8;">Guia completo dos conceitos estatísticos utilizados nesta ferramenta. Use este manual para entender cada teste, métrica e interpretação.</p>
+    </div><!-- SEÇÃO 1: CONCEITOS BÁSICOS -->
+    <div class="result-card">
+     <h3 style="font-size:14px;font-weight:700;margin:0 0 12px 0;color:var(--accent);">📌 Conceitos Básicos</h3>
+     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Média (x̄)</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Definição:</strong> Soma de todos os valores dividida pela quantidade de valores.</p>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Fórmula:</strong> x̄ = Σx / n</p>
+      <p style="font-size:11px;color:var(--muted);margin:0;"><strong style="color:var(--text);">Uso:</strong> Representa o valor central dos dados. Sensível a valores extremos.</p>
+     </div>
+     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Mediana</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Definição:</strong> Valor que divide os dados ao meio (50º percentil).</p>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Uso:</strong> Mais robusta que a média com dados assimétricos ou com outliers.</p>
+      <p style="font-size:11px;color:var(--muted);margin:0;"><strong style="color:var(--text);">Interpretação:</strong> 50% dos dados estão abaixo, 50% acima.</p>
+     </div>
+     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Desvio Padrão (DP)</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Definição:</strong> Medida de dispersão que indica quanto os dados variam em torno da média.</p>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Fórmula:</strong> DP = √(Σ(x - x̄)² / (n-1))</p>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Interpretação:</strong> DP pequeno = dados concentrados; DP grande = dados espalhados.</p>
+      <p style="font-size:11px;color:var(--muted);margin:0;"><strong style="color:var(--text);">Regra 68-95-99.7:</strong> 68% dos dados em μ±1DP, 95% em μ±2DP, 99.7% em μ±3DP.</p>
+     </div>
+     <div>
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Coeficiente de Variação (CV)</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Definição:</strong> Razão entre desvio padrão e média, em percentual.</p>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Fórmula:</strong> CV = (DP / x̄) × 100%</p>
+      <p style="font-size:11px;color:var(--muted);margin:0;"><strong style="color:var(--text);">Uso:</strong> Compara variabilidade entre grupos com escalas diferentes. CV &lt; 15% = baixa variação.</p>
+     </div>
+    </div><!-- SEÇÃO 2: ANOVA -->
+    <div class="result-card" style="border-color:var(--accent2);">
+     <h3 style="font-size:14px;font-weight:700;margin:0 0 12px 0;color:var(--accent2);">🔬 ANOVA (Análise de Variância)</h3>
+     <div style="margin-bottom:12px;padding:10px;background:var(--surface2);border-radius:6px;border-left:3px solid var(--accent2);">
+      <p style="font-size:11px;color:var(--text);margin:0;"><strong>Objetivo:</strong> Testar se há diferenças significativas entre as médias de 3 ou mais grupos.</p>
+     </div>
+     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Pressupostos</h4>
+      <ul style="font-size:11px;color:var(--muted);margin:0;padding-left:16px;line-height:1.8;">
+       <li><strong style="color:var(--text);">Normalidade:</strong> Dados em cada grupo devem ser aproximadamente normais</li>
+       <li><strong style="color:var(--text);">Homogeneidade:</strong> Variâncias dos grupos devem ser similares</li>
+       <li><strong style="color:var(--text);">Independência:</strong> Observações devem ser independentes</li>
+      </ul>
+     </div>
+     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Estatística F</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Fórmula:</strong> F = MS<sub>entre</sub> / MS<sub>dentro</sub></p>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Interpretação:</strong> F &gt; 1 sugere diferenças; quanto maior o F, mais evidência de diferenças.</p>
+      <p style="font-size:11px;color:var(--muted);margin:0;"><strong style="color:var(--text);">p-valor &lt; 0.05:</strong> Rejeita-se H₀; há diferença significativa entre grupos.</p>
+     </div>
+     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Eta-Quadrado (η²)</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Definição:</strong> Proporção da variância total explicada pelas diferenças entre grupos.</p>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Escala de efeito:</strong></p>
+      <ul style="font-size:11px;color:var(--muted);margin:0;padding-left:16px;">
+       <li>η² &lt; 0.01: Efeito mínimo</li>
+       <li>η² 0.01-0.06: Efeito pequeno</li>
+       <li>η² 0.06-0.14: Efeito médio</li>
+       <li>η² &gt; 0.14: Efeito grande</li>
+      </ul>
+     </div>
+     <div>
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Teste de Tukey HSD (Post-hoc)</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Objetivo:</strong> Após ANOVA significativa, identifica quais grupos diferem entre si.</p>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">HSD:</strong> Diferença Honestamente Significativa. Diferenças maiores que HSD são significativas.</p>
+      <p style="font-size:11px;color:var(--muted);margin:0;"><strong style="color:var(--text);">Controla:</strong> Taxa de erro familywise (evita falsos positivos com múltiplas comparações).</p>
+     </div>
+    </div><!-- SEÇÃO 3: IC 95% -->
+    <div class="result-card" style="border-color:var(--accent4);">
+     <h3 style="font-size:14px;font-weight:700;margin:0 0 12px 0;color:var(--accent4);">🎯 Intervalo de Confiança 95%</h3>
+     <div style="margin-bottom:12px;padding:10px;background:var(--surface2);border-radius:6px;border-left:3px solid var(--accent4);">
+      <p style="font-size:11px;color:var(--text);margin:0;"><strong>Objetivo:</strong> Estimar o intervalo provável contendo a média populacional com 95% de confiança.</p>
+     </div>
+     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Fórmula com σ Conhecido</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;">IC = x̄ ± z* × (σ / √n)</p>
+      <p style="font-size:11px;color:var(--muted);margin:0;"><strong style="color:var(--text);">Uso:</strong> Quando o desvio padrão populacional é conhecido (raro).</p>
+     </div>
+     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Fórmula com σ Desconhecido</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;">IC = x̄ ± t* × (s / √n)</p>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Uso:</strong> Quando usa-se a amostra para estimar (mais comum).</p>
+      <p style="font-size:11px;color:var(--muted);margin:0;"><strong style="color:var(--text);">gl (graus de liberdade):</strong> n - 1. Maior amostras = IC mais estreito.</p>
+     </div>
+     <div>
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Interpretação</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0;"><strong style="color:var(--text);">Correto:</strong> "Há 95% de confiança de que a média populacional está neste intervalo."</p>
+      <p style="font-size:11px;color:var(--muted);margin:0;margin-top:4px;"><strong style="color:var(--text);">NÃO significa:</strong> "95% de chance da média estar neste intervalo" (a média é fixa).</p>
+     </div>
+    </div><!-- SEÇÃO 4: REGRESSÃO LINEAR -->
+    <div class="result-card" style="border-color:#ffa657;">
+     <h3 style="font-size:14px;font-weight:700;margin:0 0 12px 0;color:#ffa657;">📈 Regressão Linear</h3>
+     <div style="margin-bottom:12px;padding:10px;background:var(--surface2);border-radius:6px;border-left:3px solid #ffa657;">
+      <p style="font-size:11px;color:var(--text);margin:0;"><strong>Objetivo:</strong> Modelar a relação linear entre uma variável independente (X) e dependente (Y).</p>
+     </div>
+     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Modelo Linear</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Fórmula:</strong> Ŷ = β₀ + β₁X + ε</p>
+      <ul style="font-size:11px;color:var(--muted);margin:0;padding-left:16px;line-height:1.8;">
+       <li><strong style="color:var(--text);">β₀ (intercepto):</strong> Valor de Y quando X = 0</li>
+       <li><strong style="color:var(--text);">β₁ (inclinação):</strong> Mudança em Y para cada unidade de X</li>
+       <li><strong style="color:var(--text);">ε (erro):</strong> Variação não explicada pelo modelo</li>
+      </ul>
+     </div>
+     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">R² (Coeficiente de Determinação)</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Definição:</strong> Proporção da variância de Y explicada por X.</p>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Intervalo:</strong> 0 a 1 (ou 0% a 100%)</p>
+      <ul style="font-size:11px;color:var(--muted);margin:0;padding-left:16px;">
+       <li>R² = 0.9: 90% da variância explicada (excelente)</li>
+       <li>R² = 0.5: 50% da variância explicada (moderado)</li>
+       <li>R² = 0.1: 10% da variância explicada (fraco)</li>
+      </ul>
+     </div>
+     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Correlação de Pearson (r)</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Definição:</strong> Mede a força e direção da relação linear entre X e Y.</p>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Interpretação:</strong> r = √R² (com sinal)</p>
+      <ul style="font-size:11px;color:var(--muted);margin:0;padding-left:16px;">
+       <li>|r| &gt; 0.7: Correlação forte</li>
+       <li>|r| 0.3-0.7: Correlação moderada</li>
+       <li>|r| &lt; 0.3: Correlação fraca</li>
+      </ul>
+     </div>
+     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">p-valor dos Coeficientes</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Teste t:</strong> Verifica se β₀ e β₁ são significativamente diferentes de zero.</p>
+      <p style="font-size:11px;color:var(--muted);margin:0;"><strong style="color:var(--text);">p &lt; 0.05:</strong> Coeficiente é estatisticamente significativo.</p>
+     </div>
+     <div>
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Intervalo de Previsão (IP)</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Definição:</strong> Intervalo para um valor individual de Y (mais amplo que IC).</p>
+      <p style="font-size:11px;color:var(--muted);margin:0;"><strong style="color:var(--text);">Uso:</strong> Menos preciso que IC porque inclui erro de previsão.</p>
+     </div>
+    </div><!-- SEÇÃO 5: P-VALOR E SIGNIFICÂNCIA -->
+    <div class="result-card">
+     <h3 style="font-size:14px;font-weight:700;margin:0 0 12px 0;color:var(--accent);">⚠️ P-Valor e Significância Estatística</h3>
+     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">O que é p-valor?</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Definição:</strong> Probabilidade de observar dados tão extremos quanto os observados, assumindo que a hipótese nula (H₀) é verdadeira.</p>
+      <p style="font-size:11px;color:var(--muted);margin:0;"><strong style="color:var(--text);">Intervalo:</strong> 0 a 1 (ou 0% a 100%)</p>
+     </div>
+     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Níveis de Significância</h4>
+      <ul style="font-size:11px;color:var(--muted);margin:0;padding-left:16px;line-height:1.8;">
+       <li>p &lt; 0.001: Altamente significativo (***)</li>
+       <li>p &lt; 0.01: Muito significativo (**)</li>
+       <li>p &lt; 0.05: Significativo (*) ← Padrão</li>
+       <li>p &lt; 0.10: Marginalmente significativo (•)</li>
+       <li>p ≥ 0.05: Não significativo (ns)</li>
+      </ul>
+     </div>
+     <div>
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Interpretação Correta</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Correto:</strong> "Se H₀ fosse verdadeira, haveria 5% de chance de ver estes dados."</p>
+      <p style="font-size:11px;color:var(--text);margin:0;margin-top:4px;background:var(--surface2);padding:6px 8px;border-radius:4px;border-left:2px solid var(--accent3);">❌ NÃO É: "Há 5% de chance de H₀ ser verdadeira"</p>
+     </div>
+    </div><!-- SEÇÃO 6: DICAS E BOAS PRÁTICAS -->
+    <div class="result-card success">
+     <h3 style="font-size:14px;font-weight:700;margin:0 0 12px 0;color:var(--accent2);">💡 Dicas e Boas Práticas</h3>
+     <div style="margin-bottom:12px;">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Antes de Analisar</h4>
+      <ul style="font-size:11px;color:var(--muted);margin:0;padding-left:16px;line-height:1.8;">
+       <li>Visualize os dados: use gráficos para entender a distribuição</li>
+       <li>Procure outliers: valores extremos podem distorcer resultados</li>
+       <li>Verifique normalidade: testes como Shapiro-Wilk (não disponível aqui)</li>
+       <li>Verifique homogeneidade: teste de Levene (não disponível aqui)</li>
+      </ul>
+     </div>
+     <div style="margin-bottom:12px;">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Tamanho da Amostra</h4>
+      <ul style="font-size:11px;color:var(--muted);margin:0;padding-left:16px;line-height:1.8;">
+       <li>n &lt; 30: Use t-Student (mais conservador)</li>
+       <li>n ≥ 30: Distribuição normal pode ser assumida (Teorema do Limite Central)</li>
+       <li>Maior n = maior poder estatístico (mais fácil detectar diferenças reais)</li>
+      </ul>
+     </div>
+     <div style="margin-bottom:12px;">
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Regressão</h4>
+      <ul style="font-size:11px;color:var(--muted);margin:0;padding-left:16px;line-height:1.8;">
+       <li>Escopo: não extraia previsões muito além do intervalo de X observado</li>
+       <li>Resíduos: devem ser aproximadamente normais e sem padrão</li>
+       <li>Outliers: verificar pontos com resíduos padronizados &gt; 2</li>
+      </ul>
+     </div>
+     <div>
+      <h4 style="font-size:12px;font-weight:600;margin:0 0 6px 0;">Múltiplas Comparações</h4>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 4px 0;"><strong style="color:var(--text);">Problema:</strong> Quanto mais testes, maior chance de falso positivo (erro Tipo I).</p>
+      <p style="font-size:11px;color:var(--muted);margin:0;"><strong style="color:var(--text);">Solução:</strong> Use Tukey HSD ou outros testes corrigidos (aplicado automaticamente aqui).</p>
+     </div>
+    </div><!-- SEÇÃO 7: TABELA DE REFERÊNCIA -->
+    <div class="result-card">
+     <h3 style="font-size:14px;font-weight:700;margin:0 0 12px 0;color:var(--accent4);">📋 Valores Críticos Comuns</h3>
+     <div style="overflow-x:auto;">
+      <table class="data-table" style="font-size:11px;">
+       <thead>
+        <tr>
+         <th>Confiança</th>
+         <th>α</th>
+         <th>z (normal)</th>
+         <th>t (df=∞)</th>
+         <th>Interpretação</th>
+        </tr>
+       </thead>
+       <tbody>
+        <tr>
+         <td>90%</td>
+         <td>0.10</td>
+         <td>1.645</td>
+         <td>1.645</td>
+         <td>Menos conservador</td>
+        </tr>
+        <tr>
+         <td><strong>95%</strong></td>
+         <td><strong>0.05</strong></td>
+         <td><strong>1.960</strong></td>
+         <td><strong>1.960</strong></td>
+         <td><strong>Padrão usual</strong></td>
+        </tr>
+        <tr>
+         <td>99%</td>
+         <td>0.01</td>
+         <td>2.576</td>
+         <td>2.576</td>
+         <td>Muito conservador</td>
+        </tr>
+       </tbody>
+      </table>
+     </div>
+    </div><!-- SEÇÃO 8: REFERÊNCIAS -->
+    <div class="result-card" style="border-color:var(--muted);background:transparent;border-style:dashed;">
+     <h3 style="font-size:13px;font-weight:600;margin:0 0 10px 0;color:var(--muted);">📚 Referências e Recursos</h3>
+     <ul style="font-size:11px;color:var(--muted);margin:0;padding-left:16px;line-height:1.8;">
+      <li><strong style="color:var(--text);">Books:</strong> "Statistics" (Freedman, Pisani, Purves) | "Modern Statistics" (Banerjee)</li>
+      <li><strong style="color:var(--text);">Online:</strong> Khan Academy Statistics | StatTrek.com | Coursera (Duke University)</li>
+      <li><strong style="color:var(--text);">Ferramentas:</strong> R | Python (scipy, numpy) | SPSS | Minitab</li>
+     </ul>
+     <p style="font-size:10px;color:var(--muted);margin:10px 0 0 0;padding-top:10px;border-top:1px dashed var(--border);">Este manual é uma referência rápida. Para decisões críticas, consulte um estatístico profissional.</p>
+    </div>
+   </div>
+  </div>
+  <script>
+/* =====================================================
+   PWA REGISTRATION & SERVICE WORKER
+   ===================================================== */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
+}
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-btn').style.display = 'flex';
+});
+
+async function installPWA() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      showToast('✓ App instalado com sucesso!');
+    }
+    deferredPrompt = null;
+    document.getElementById('install-btn').style.display = 'none';
+  }
+}
+
+/* =====================================================
+   STATISTICAL UTILITIES
+   ===================================================== */
+
+// Gamma function (Lanczos approximation)
+function gammaLn(z) {
+  const g = 7;
+  const c = [0.99999999999980993,676.5203681218851,-1259.1392167224028,
+    771.32342877765313,-176.61502916214059,12.507343278686905,
+    -0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+  if (z < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * z)) - gammaLn(1 - z);
+  z -= 1;
+  let x = c[0];
+  for (let i = 1; i < g + 2; i++) x += c[i] / (z + i);
+  const t = z + g + 0.5;
+  return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+}
+
+// Regularized incomplete beta function (continued fraction)
+function betaInc(x, a, b) {
+  if (x < 0 || x > 1) return 0;
+  if (x === 0) return 0;
+  if (x === 1) return 1;
+  const lbeta = gammaLn(a) + gammaLn(b) - gammaLn(a + b);
+  const front = Math.exp(Math.log(x) * a + Math.log(1 - x) * b - lbeta) / a;
+  // Lentz continued fraction
+  function cf() {
+    const maxIter = 200, eps = 3e-7, fpmin = 1e-30;
+    let qab = a + b, qap = a + 1, qam = a - 1;
+    let c2 = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < fpmin) d = fpmin;
+    d = 1 / d;
+    let h = d;
+    for (let m = 1; m <= maxIter; m++) {
+      let m2 = 2 * m;
+      let aa2 = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa2 * d;
+      if (Math.abs(d) < fpmin) d = fpmin;
+      c2 = 1 + aa2 / c2;
+      if (Math.abs(c2) < fpmin) c2 = fpmin;
+      d = 1 / d; h *= d * c2;
+      aa2 = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa2 * d;
+      if (Math.abs(d) < fpmin) d = fpmin;
+      c2 = 1 + aa2 / c2;
+      if (Math.abs(c2) < fpmin) c2 = fpmin;
+      d = 1 / d;
+      const del = d * c2;
+      h *= del;
+      if (Math.abs(del - 1) < eps) break;
+    }
+    return h;
+  }
+  if (x < (a + 1) / (a + b + 2)) return front * cf();
+  return 1 - Math.exp(Math.log(1 - x) * b + Math.log(x) * a - lbeta) / b * cf2(1 - x, b, a);
+  function cf2(x2, a2, b2) {
+    const maxIter = 200, eps = 3e-7, fpmin = 1e-30;
+    let qab = a2 + b2, qap = a2 + 1, qam = a2 - 1;
+    let c2 = 1, d = 1 - qab * x2 / qap;
+    if (Math.abs(d) < fpmin) d = fpmin;
+    d = 1 / d; let h = d;
+    for (let m = 1; m <= maxIter; m++) {
+      let m2 = 2 * m;
+      let aa2 = m * (b2 - m) * x2 / ((qam + m2) * (a2 + m2));
+      d = 1 + aa2 * d; if (Math.abs(d) < fpmin) d = fpmin;
+      c2 = 1 + aa2 / c2; if (Math.abs(c2) < fpmin) c2 = fpmin;
+      d = 1 / d; h *= d * c2;
+      aa2 = -(a2 + m) * (qab + m) * x2 / ((a2 + m2) * (qap + m2));
+      d = 1 + aa2 * d; if (Math.abs(d) < fpmin) d = fpmin;
+      c2 = 1 + aa2 / c2; if (Math.abs(c2) < fpmin) c2 = fpmin;
+      d = 1 / d; const del = d * c2; h *= del;
+      if (Math.abs(del - 1) < eps) break;
+    }
+    return h;
+  }
+}
+
+// p-value from F distribution using regularized incomplete beta
+function pFromF(F, df1, df2) {
+  if (F <= 0) return 1;
+  const x = df2 / (df2 + df1 * F);
+  return betaInc(x, df2 / 2, df1 / 2);
+}
+
+// t-distribution p-value (two-tailed)
+function pFromT(t, df) {
+  const x = df / (df + t * t);
+  return betaInc(x, df / 2, 0.5);
+}
+
+// Inverse t (Newton-Raphson via beta)
+function tInv(p, df) {
+  // Start with normal approximation then refine
+  let t = Math.sqrt(df * (Math.pow(1 - p, -2 / df) - 1));
+  for (let i = 0; i < 50; i++) {
+    const pt = pFromT(t, df);
+    const d = (pt - p) * Math.sqrt(2 * Math.PI) * Math.exp(0.5 * t * t) * Math.sqrt(1 + t * t / df);
+    t -= d;
+    if (Math.abs(d) < 1e-9) break;
+  }
+  return t;
+}
+
+// Z critical for confidence interval
+function zCrit(alpha) {
+  // Newton on Φ^{-1}
+  const p = 1 - alpha / 2;
+  let z = 1.96;
+  for (let i = 0; i < 50; i++) {
+    const phi = 0.5 * (1 + erf(z / Math.SQRT2));
+    const dphi = Math.exp(-z * z / 2) / Math.sqrt(2 * Math.PI);
+    z -= (phi - p) / dphi;
+  }
+  return z;
+}
+function erf(x) {
+  const t = 1 / (1 + 0.3275911 * Math.abs(x));
+  const poly = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
+  const r = 1 - poly * Math.exp(-x * x);
+  return x < 0 ? -r : r;
+}
+
+function mean(arr) { return arr.reduce((s, v) => s + v, 0) / arr.length; }
+function variance(arr, ddof = 1) {
+  const m = mean(arr);
+  return arr.reduce((s, v) => s + (v - m) ** 2, 0) / (arr.length - ddof);
+}
+function std(arr, ddof = 1) { return Math.sqrt(variance(arr, ddof)); }
+function fmt(n, d = 4) {
+  if (Math.abs(n) < 1e-4 && n !== 0) return n.toExponential(3);
+  return Number(n.toFixed(d));
+}
+function fmtP(p) {
+  if (p < 0.001) return '< 0.001';
+  return p.toFixed(4);
+}
+
+/* =====================================================
+   SCIENTIFIC TEXT GENERATOR
+   ===================================================== */
+function interpretacaoCientifica(alpha, r2, cv) {
+  const textoR2 = r2 > 0.7 
+    ? "forte associação entre as variáveis analisadas"
+    : r2 > 0.4
+    ? "associação moderada entre as variáveis"
+    : "fraca relação entre as variáveis";
+    
+  const textoCV = cv < 20
+    ? "consistência nos dados coletados"
+    : cv < 30
+    ? "heterogeneidade moderada"
+    : "alta dispersão, sugerindo influência de fatores externos";
+
+  return `\n[INTERPRETAÇÃO CIENTÍFICA]\n\nOs resultados sugerem ${textoR2}.\n\nA variabilidade observada (${cv.toFixed(2)}%) indica ${textoCV}.\n\nEstudos em comunicação digital em saúde apontam que métricas de engajamento são influenciadas por formato de conteúdo, relevância temática e frequência de postagem.`;
+}
+
+function gerarTextoCientifico(dados) {
+  const { media, dp, cv, icInf, icSup, r2 } = dados;
+
+  const resultados = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RESULTADOS
+
+A análise dos dados revelou média de engajamento de ${media.toFixed(2)}%, 
+com desvio padrão de ${dp.toFixed(2)}. O coeficiente de variação foi de ${cv.toFixed(2)}%, 
+indicando ${cv < 20 ? "baixa" : cv < 30 ? "moderada" : "alta"} variabilidade dos dados.
+
+O intervalo de confiança de 95% situou-se entre ${icInf.toFixed(2)}% e ${icSup.toFixed(2)}%.
+
+O modelo de regressão apresentou coeficiente de determinação (R²) de ${r2.toFixed(3)}.
+`;
+
+  const discussao = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DISCUSSÃO
+
+Os resultados sugerem ${
+    r2 > 0.7 
+    ? "forte associação entre as variáveis analisadas"
+    : r2 > 0.4
+    ? "associação moderada entre as variáveis"
+    : "fraca relação entre as variáveis"
+  }.
+
+A variabilidade observada (${cv.toFixed(2)}%) indica ${
+    cv < 20
+    ? "consistência nos dados coletados"
+    : cv < 30
+    ? "heterogeneidade moderada"
+    : "alta dispersão, sugerindo influência de fatores externos"
+  }.
+
+Estudos em comunicação digital em saúde apontam que métricas de engajamento 
+são influenciadas por fatores como formato do conteúdo, relevância temática 
+e frequência de postagem.
+
+Os achados corroboram a literatura científica que demonstra a importância 
+da análise estatística rigorosa na avaliação de intervenções digitais em saúde.
+`;
+
+  const conclusao = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CONCLUSÃO
+
+Conclui-se que o engajamento analisado apresenta ${
+    r2 > 0.5 ? "padrão consistente" : "comportamento variável"
+  }.
+
+Os resultados reforçam a importância da análise estatística para compreender 
+o impacto de estratégias digitais em saúde pública.
+
+Sugere-se a ampliação da amostra e inclusão de novas variáveis para maior 
+robustez analítica em futuras investigações.
+`;
+
+  return resultados + discussao + conclusao;
+}
+
+/* =====================================================
+   ARTICLE GENERATOR
+   ===================================================== */
+function intervaloConfiancaAvancado(dados) {
+  const n = dados.length;
+  const m = mean(dados);
+  const s = std(dados);
+  const se = s / Math.sqrt(n);
+  const tCrit = tInv(0.05, n - 1);
+  const margin = tCrit * se;
+  return { inferior: m - margin, superior: m + margin };
+}
+
+function regressaoSimples(x, y) {
+  const n = x.length;
+  const mx = mean(x), my = mean(y);
+  const Sxy = x.reduce((s, xi, i) => s + (xi - mx) * (y[i] - my), 0);
+  const Sxx = x.reduce((s, xi) => s + (xi - mx) ** 2, 0);
+  const b1 = Sxy / Sxx;
+  const b0 = my - b1 * mx;
+  const Yhat = x.map(xi => b0 + b1 * xi);
+  const SS_res = y.reduce((s, yi, i) => s + (yi - Yhat[i]) ** 2, 0);
+  const SS_tot = y.reduce((s, yi) => s + (yi - my) ** 2, 0);
+  const r2 = SS_tot ? (SS_tot - SS_res) / SS_tot : 0;
+  return { b0, b1, r2 };
+}
+
+function mostrarArtigo(conteudo) {
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position:fixed;top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;
+    z-index:2000;padding:20px;
+  `;
+  modal.innerHTML = `
+    <div style="
+      background:var(--surface);border:1px solid var(--border);border-radius:12px;
+      max-width:800px;width:100%;max-height:80vh;overflow-y:auto;
+      padding:24px;font-size:13px;line-height:1.8;color:var(--text);
+    ">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:16px;">
+        <h2 style="margin:0;font-size:16px;font-weight:700;">📄 Artigo Científico Gerado</h2>
+        <button onclick="this.closest('div').parentElement.parentElement.remove()" 
+          style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;">✕</button>
+      </div>
+      <pre style="
+        font-family:'JetBrains Mono';font-size:12px;
+        white-space:pre-wrap;word-wrap:break-word;
+        background:var(--surface2);padding:12px;border-radius:6px;
+        border-left:3px solid var(--accent);margin:0 0 16px 0;
+      ">${conteudo}</pre>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-primary" onclick="copiarArtigo(event)" style="flex:1;"><i data-lucide="copy" style="width:12px;height:12px;display:inline;margin-right:4px;"></i> Copiar</button>
+        <button class="btn-ghost" onclick="baixarArtigo('${conteudo.replace(/"/g, '\\"')}')" style="flex:1;"><i data-lucide="download" style="width:12px;height:12px;display:inline;margin-right:4px;"></i> Baixar TXT</button>
+        <button class="btn-ghost" onclick="this.closest('div').parentElement.parentElement.remove()" style="flex:1;"><i data-lucide="x" style="width:12px;height:12px;display:inline;margin-right:4px;"></i> Fechar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  lucide.createIcons();
+}
+
+function copiarArtigo(e) {
+  const texto = e.target.closest('div').querySelector('pre').textContent;
+  navigator.clipboard.writeText(texto).then(() => {
+    showToast('✓ Artigo copiado para clipboard');
+  });
+}
+
+function baixarArtigo(conteudo) {
+  const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'artigo-cientifico-pibic.txt';
+  a.click();
+  showToast('✓ Artigo baixado');
+}
+
+function gerarArtigo() {
+  if (!pibicData.length) {
+    showToast('Adicione dados antes', 'warning');
+    return;
+  }
+
+  const engagements = pibicData.map(calcEngage);
+  const n = engagements.length;
+  const media = mean(engagements);
+  const dp = std(engagements);
+  const cv = media ? (dp / media) * 100 : 0;
+  const sorted = [...engagements].sort((a, b) => a - b);
+  const med = sorted.length % 2 ? sorted[Math.floor(sorted.length / 2)] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
+
+  const ic = intervaloConfiancaAvancado(engagements);
+
+  // Regressão
+  const x = pibicData.map((_, i) => i + 1);
+  const reg = regressaoSimples(x, engagements);
+
+  const significancia = reg.r2 > 0.5 ? 'forte' : reg.r2 > 0.3 ? 'moderada' : 'fraca';
+  const variabilidade = cv < 20 ? 'baixa' : cv < 30 ? 'moderada' : 'alta';
+
+  const artigo = `
+╔════════════════════════════════════════════════════════════╗
+║    ANÁLISE ESTATÍSTICA DE ENGAJAMENTO EM SAÚDE DIGITAL    ║
+║                                                            ║
+║       Laboratório Científico PIBIC PRO - Relatório       ║
+╚════════════════════════════════════════════════════════════╝
+
+TÍTULO
+Análise Quantitativa de Engajamento em Conteúdo Digital 
+de Saúde: Métodos Estatísticos Aplicados
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. INTRODUÇÃO
+
+O uso de redes sociais como ferramenta de educação em saúde 
+tem crescido exponencialmente na última década. A avaliação 
+de métricas de engajamento permite compreender o impacto das 
+estratégias de comunicação digital e orientar futuras 
+intervenções.
+
+O objetivo deste estudo foi caracterizar e analisar o padrão 
+de engajamento em ${n} publicações de conteúdo relacionado à 
+saúde, utilizando métodos estatísticos descritivos e 
+inferenciais.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2. METODOLOGIA
+
+2.1. Delineamento e População
+Estudo transversal observacional baseado na análise de ${n} 
+publicações em plataforma de rede social. O engajamento foi 
+calculado como a razão entre o total de interações 
+(curtidas, comentários, compartilhamentos e salvamentos) 
+e o alcance da publicação, expressa em percentual.
+
+2.2. Variáveis Estudadas
+- Engajamento total (%)
+- Tipo de conteúdo: ${[...new Set(pibicData.map(d => d.tipo))].join(', ')}
+- Temáticas: ${[...new Set(pibicData.map(d => d.tema))].join(', ')}
+- Dispositivos: ${[...new Set(pibicData.map(d => d.dispositivo))].join(', ')}
+
+2.3. Análise Estatística
+Foram aplicadas técnicas de estatística descritiva, incluindo 
+medidas de tendência central e dispersão. Intervalos de 
+confiança de 95% foram calculados utilizando a distribuição 
+t de Student. Análise de regressão linear foi empregada para 
+verificar possível tendência temporal.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3. RESULTADOS
+
+3.1. Estatísticas Descritivas
+
+Amostra:                    n = ${n} publicações
+
+Engajamento (%)
+  Mínimo:                   ${Math.min(...engagements).toFixed(2)}%
+  Q1 (25º percentil):       ${sorted[Math.floor(n * 0.25)].toFixed(2)}%
+  Mediana (50º percentil):  ${med.toFixed(2)}%
+  Q3 (75º percentil):       ${sorted[Math.floor(n * 0.75)].toFixed(2)}%
+  Máximo:                   ${Math.max(...engagements).toFixed(2)}%
+
+Medidas de Tendência Central
+  Média (x̄):               ${media.toFixed(2)}%
+  Mediana (Md):            ${med.toFixed(2)}%
+  
+Medidas de Dispersão
+  Desvio Padrão (DP):      ${dp.toFixed(2)}
+  Variância:               ${(dp * dp).toFixed(4)}
+  Amplitude:               ${(Math.max(...engagements) - Math.min(...engagements)).toFixed(2)}%
+  Amplitude Interquartil:  ${(sorted[Math.floor(n * 0.75)] - sorted[Math.floor(n * 0.25)]).toFixed(2)}%
+
+Medida de Variabilidade Relativa
+  Coeficiente de Variação (CV): ${cv.toFixed(2)}%
+
+Classificação: ${variabilidade.toUpperCase()}
+
+3.2. Intervalo de Confiança (IC) 95%
+
+O intervalo de confiança de 95% para a média populacional 
+de engajamento é:
+
+IC 95% = [${ic.inferior.toFixed(2)}% ; ${ic.superior.toFixed(2)}%]
+
+Interpretação: Há 95% de confiança de que o verdadeiro valor 
+da média populacional de engajamento está contido neste 
+intervalo. A margem de erro foi de ±${((ic.superior - ic.inferior) / 2).toFixed(2)}%.
+
+3.3. Análise de Tendência Temporal (Regressão Linear)
+
+Modelo: Engajamento = β₀ + β₁(Número da Publicação)
+
+Coeficientes Estimados:
+  Intercepto (β₀):  ${reg.b0.toFixed(4)}
+  Inclinação (β₁):  ${reg.b1.toFixed(4)}
+
+Qualidade do Ajuste:
+  R² (Coef. Determinação): ${reg.r2.toFixed(4)}
+  ${reg.r2 >= 0.7 ? '  Interpretação: Modelo com excelente ajuste' : 
+    reg.r2 >= 0.5 ? '  Interpretação: Modelo com bom ajuste' : 
+    reg.r2 >= 0.3 ? '  Interpretação: Modelo com ajuste moderado' : 
+    '  Interpretação: Modelo com ajuste fraco'}
+
+  Significado: ${(reg.r2 * 100).toFixed(1)}% da variabilidade do 
+  engajamento é explicada pela sequência temporal das 
+  publicações.
+
+Tendência Observada: ${reg.b1 > 0 ? 'Aumento' : reg.b1 < 0 ? 'Diminuição' : 'Ausência'} 
+de engajamento ao longo das publicações (${Math.abs(reg.b1).toFixed(4)} pontos percentuais por publicação)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4. DISCUSSÃO
+
+4.1. Análise dos Resultados Descritivos
+
+A média de engajamento observada foi de ${media.toFixed(2)}%, com 
+${variabilidade} variabilidade entre as publicações (CV = ${cv.toFixed(2)}%). 
+Esta dispersão sugere que o engajamento não é uniforme, 
+indicando que fatores específicos de cada publicação 
+(formato, horário, tema) podem exercer influência 
+significativa.
+
+A análise da distribuição revela que ${
+  Math.abs(media - med) > dp / 2 
+  ? 'a média e a mediana diferem substancialmente, sugerindo possível assimetria na distribuição' 
+  : 'a média e a mediana são próximas, consistente com uma distribuição aproximadamente simétrica'
+}.
+
+4.2. Significância das Descobertas
+
+O intervalo de confiança de 95% fornece uma faixa plausível 
+para o verdadeiro engajamento populacional. A largura deste 
+intervalo (${(ic.superior - ic.inferior).toFixed(2)} pontos percentuais) reflete 
+a precisão da estimativa da média.
+
+4.3. Análise da Tendência Temporal
+
+A regressão linear revelou ${significancia === 'forte' ? 'uma relação considerável' : 
+                            significancia === 'moderada' ? 'uma relação moderada' : 
+                            'uma relação fraca'} entre a sequência 
+temporal e o engajamento (R² = ${reg.r2.toFixed(4)}). 
+
+${reg.b1 > 0 ? 
+  'O coeficiente positivo sugere que publicações mais recentes tendem a apresentar maior engajamento, possivelmente reflexo de aprimoramento nas estratégias de comunicação.' 
+: reg.b1 < 0 ? 
+  'O coeficiente negativo sugere diminuição do engajamento ao longo do tempo, o que pode indicar fenômeno de habituação do público ou necessidade de renovação conteúdo.' 
+: 
+  'A ausência de tendência temporal significativa sugere consistência no engajamento independentemente da sequência de publicação.'
+}
+
+4.4. Implicações Clínicas e Comunicacionais
+
+Os achados indicam que a estratégia de comunicação em saúde 
+digital pode ser otimizada considerando-se os padrões 
+observados. Recomenda-se:
+
+• Investigação qualitativa dos fatores que levaram às 
+  publicações com maior engajamento
+• Avaliação da consistência da frequência de publicação
+• Análise do horário e formato das postagens
+• Avaliação de métricas qualitativas de impacto
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5. CONCLUSÃO
+
+Os dados analisados revelam que o engajamento em conteúdo 
+digital de saúde apresenta comportamento ${
+  reg.r2 > 0.3 ? 'com tendência discernível' : 'variável e multifatorial'
+}, sendo influenciado por múltiplos fatores. 
+
+O intervalo de confiança de 95% estabelece um range plausível 
+para o verdadeiro engajamento populacional. A ${variabilidade} 
+variabilidade observada ressalta a importância de estratégias 
+personalizadas na comunicação em saúde digital.
+
+Este estudo reforça a importância da análise estatística rigorosa 
+na avaliação de programas de comunicação em saúde, fornecendo 
+subsídios quantitativos para tomada de decisão baseada em 
+evidências.
+
+Recomenda-se continuidade do monitoramento com aumento da amostra 
+para maior robustez das conclusões.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+6. REFERÊNCIAS
+
+1. Statista. Social Media Statistics.
+2. Katz E, Blumler JG, Gurevitch M. Uses and Gratifications of 
+   Mass Communication. Public Opinion Quarterly. 1973.
+3. Montgomery KC, Chester J, Milosevic T. The New Tactics of 
+   Corporate Manipulation. International Journal of 
+   Communication. 2019.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+INFORMAÇÕES TÉCNICAS
+
+Gerado automaticamente pelo: Lab Científico PIBIC PRO
+Data: ${new Date().toLocaleString('pt-BR')}
+Número de registros: ${n}
+Método: Análise Estatística Descritiva e Inferencial
+Nível de significância: α = 0.05
+Distribuição utilizada: t de Student
+`;
+
+  mostrarArtigo(artigo);
+}
+
+/* =====================================================
+   GROUP MANAGEMENT
+   ===================================================== */
+let groupCount = 0;
+const defaultGroups = [
+  { name: 'Grupo A', data: '12, 15, 13, 17, 14' },
+  { name: 'Grupo B', data: '18, 22, 19, 24, 20' },
+  { name: 'Grupo C', data: '10, 11, 9, 13, 12' },
+];
+
+function addGroup(name = '', data = '') {
+  groupCount++;
+  const id = `group-${groupCount}`;
+  const container = document.getElementById('group-container');
+  const colors = ['#58a6ff', '#3fb950', '#f78166', '#d2a8ff', '#ffa657'];
+  const color = colors[(groupCount - 1) % colors.length];
+  const div = document.createElement('div');
+  div.id = id;
+  div.style.cssText = 'margin-bottom:10px;border-radius:8px;border:1px solid var(--border);overflow:hidden;';
+  div.innerHTML = `
+    <div style="background:var(--surface2);padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);">
+      <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></div>
+      <input type="text" value="${name || 'Grupo ' + groupCount}" 
+        style="background:transparent;border:none;outline:none;font-family:Sora,sans-serif;font-size:12px;font-weight:600;color:var(--text);flex:1;width:0;"
+        id="${id}-name">
+      <button onclick="removeGroup('${id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;padding:0;">
+        <i data-lucide="x" style="width:12px;height:12px;"></i>
+      </button>
+    </div>
+    <textarea id="${id}-data" rows="2" style="border-radius:0;border:none;border-bottom:1px solid transparent;" 
+      placeholder="valores separados por vírgula">${data}</textarea>
+  `;
+  container.appendChild(div);
+  lucide.createIcons();
+}
+
+function removeGroup(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function getGroups() {
+  const container = document.getElementById('group-container');
+  const groups = [];
+  container.querySelectorAll('[id^="group-"]').forEach(el => {
+    if (!el.id.includes('-name') && !el.id.includes('-data')) {
+      const name = document.getElementById(el.id + '-name').value.trim();
+      const raw = document.getElementById(el.id + '-data').value;
+      const data = raw.split(/[\s,;\n]+/).map(v => parseFloat(v)).filter(v => !isNaN(v));
+      if (data.length >= 2) groups.push({ name, data });
+    }
+  });
+  return groups;
+}
+
+/* =====================================================
+   ANOVA
+   ===================================================== */
+function runAnova() {
+  const groups = getGroups();
+  const resultsEl = document.getElementById('anova-results');
+  const quickEl = document.getElementById('anova-quick-stats');
+
+  if (groups.length < 2) {
+    resultsEl.innerHTML = `<div class="error-box"><i data-lucide="alert-circle" style="width:16px;height:16px;flex-shrink:0;"></i> Insira pelo menos 2 grupos com dados válidos.</div>`;
+    lucide.createIcons();
+    return;
+  }
+
+  const allData = groups.flatMap(g => g.data);
+  const N = allData.length;
+  const k = groups.length;
+  const grandMean = mean(allData);
+
+  // SS between
+  const SS_between = groups.reduce((s, g) => s + g.data.length * (mean(g.data) - grandMean) ** 2, 0);
+  // SS within
+  const SS_within = groups.reduce((s, g) => s + g.data.reduce((ss, v) => ss + (v - mean(g.data)) ** 2, 0), 0);
+  const SS_total = SS_between + SS_within;
+
+  const df_between = k - 1;
+  const df_within = N - k;
+  const MS_between = SS_between / df_between;
+  const MS_within = SS_within / df_within;
+  const F = MS_between / MS_within;
+  const pValue = pFromF(F, df_between, df_within);
+  const eta2 = SS_between / SS_total;
+
+  // Quick stats
+  quickEl.innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-box"><div class="val" style="color:${pValue < 0.05 ? 'var(--accent2)' : 'var(--accent3);'};">${fmtP(pValue)}</div><div class="lbl">p-valor</div></div>
+      <div class="stat-box"><div class="val">${fmt(F, 3)}</div><div class="lbl">F</div></div>
+      <div class="stat-box"><div class="val" style="color:var(--accent4);">${fmt(eta2, 4)}</div><div class="lbl">η²</div></div>
+    </div>
+  `;
+
+  // Effect size label
+  const etaLabel = eta2 < 0.01 ? 'mínimo' : eta2 < 0.06 ? 'pequeno' : eta2 < 0.14 ? 'médio' : 'grande';
+  const etaPct = Math.min(eta2 * 100, 100);
+
+  // Tukey HSD
+  const tukey = tukeyHSD(groups, MS_within, df_within);
+
+  resultsEl.innerHTML = `
+    <!-- ANOVA Table -->
+    <div class="result-card highlight" style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <h3 style="font-size:13px;font-weight:600;margin:0;">Tabela ANOVA</h3>
+        <span class="sig-badge ${pValue < 0.05 ? 'sig' : 'not-sig'}">${pValue < 0.05 ? 'Significativo' : 'Não significativo'}</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead><tr>
+            <th>Fonte</th><th>SQ</th><th>gl</th><th>MQ</th><th>F</th><th>p-valor</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td style="color:var(--accent);">Entre grupos</td>
+              <td>${fmt(SS_between, 4)}</td>
+              <td>${df_between}</td>
+              <td>${fmt(MS_between, 4)}</td>
+              <td style="font-weight:700;">${fmt(F, 4)}</td>
+              <td><span style="font-weight:700;color:${pValue < 0.05 ? 'var(--accent2)' : 'var(--accent3)'};">${fmtP(pValue)}</span></td>
+            </tr>
+            <tr>
+              <td style="color:var(--muted);">Dentro dos grupos</td>
+              <td>${fmt(SS_within, 4)}</td>
+              <td>${df_within}</td>
+              <td>${fmt(MS_within, 4)}</td>
+              <td>—</td><td>—</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;">Total</td>
+              <td>${fmt(SS_total, 4)}</td>
+              <td>${N - 1}</td>
+              <td>—</td><td>—</td><td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Descriptive Stats -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      <!-- Per-group stats -->
+      <div class="result-card">
+        <h3 style="font-size:13px;font-weight:600;margin:0 0 12px 0;">Estatísticas Descritivas</h3>
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead><tr><th>Grupo</th><th>n</th><th>Média</th><th>DP</th><th>EP</th></tr></thead>
+            <tbody>
+              ${groups.map(g => {
+                const m = mean(g.data), s = std(g.data), se = s / Math.sqrt(g.data.length);
+                const tCrit = tInv(0.05, g.data.length - 1);
+                const ci = tCrit * se;
+                return `<tr>
+                  <td style="font-weight:500;">${g.name}</td>
+                  <td>${g.data.length}</td>
+                  <td>${fmt(m, 3)}</td>
+                  <td>${fmt(s, 3)}</td>
+                  <td>${fmt(se, 3)}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Effect size eta² -->
+      <div class="result-card purple">
+        <h3 style="font-size:13px;font-weight:600;margin:0 0 12px 0;">Tamanho de Efeito (η²)</h3>
+        <div style="text-align:center;padding:12px 0;">
+          <div style="font-size:42px;font-weight:800;font-family:'JetBrains Mono';color:var(--accent4);">${fmt(eta2, 4)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">η² = SS<sub>entre</sub> / SS<sub>total</sub></div>
+          <div class="progress-bar-bg" style="margin-top:14px;"><div class="progress-bar-fill" style="width:${etaPct}%;"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px;"><span>0</span><span>0.06</span><span>0.14</span><span>1</span></div>
+          <div style="margin-top:12px;">
+            <span style="background:#2d1a4a;border:1px solid var(--accent4);border-radius:6px;padding:4px 14px;font-size:12px;color:var(--accent4);font-weight:600;">${etaLabel}</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;">${fmt(etaPct, 1)}% da variância total explicada</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tukey HSD -->
+    <div class="result-card success">
+      <h3 style="font-size:13px;font-weight:600;margin:0 0 4px 0;">Post-hoc: Teste de Tukey HSD</h3>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 12px 0;">Comparações par a par entre grupos. HSD = q × √(MS<sub>dentro</sub>/n)</p>
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead><tr><th>Comparação</th><th>Dif. Médias</th><th>HSD</th><th>p-ajustado</th><th>Conclusão</th></tr></thead>
+          <tbody>
+            ${tukey.map(row => `
+              <tr>
+                <td style="font-weight:500;">${row.label}</td>
+                <td>${fmt(row.diff, 3)}</td>
+                <td>${fmt(row.hsd, 3)}</td>
+                <td style="font-weight:600;color:${row.pAdj < 0.05 ? 'var(--accent2)' : 'var(--text)'};">${fmtP(row.pAdj)}</td>
+                <td><span class="sig-badge ${row.pAdj < 0.05 ? 'sig' : 'not-sig'}">${row.pAdj < 0.05 ? 'Significativo' : 'Não sig.'}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  lucide.createIcons();
+}
+
+function tukeyHSD(groups, MSwithin, dfWithin) {
+  const results = [];
+  for (let i = 0; i < groups.length; i++) {
+    for (let j = i + 1; j < groups.length; j++) {
+      const gi = groups[i], gj = groups[j];
+      const mi = mean(gi.data), mj = mean(gj.data);
+      const diff = Math.abs(mi - mj);
+      const ni = gi.data.length, nj = gj.data.length;
+      const se = Math.sqrt(MSwithin * (1 / ni + 1 / nj) / 2);
+      const q = diff / se;
+      // Approximate p from studentized range using F with df2
+      // Use: p ≈ pFromF(q²/2, 1, dfWithin) as conservative approximation
+      const F_approx = (q * q) / 2;
+      const pAdj = Math.min(pFromF(F_approx, 1, dfWithin) * groups.length, 1);
+      const hsd = q * se;
+      results.push({ label: `${gi.name} vs ${gj.name}`, diff, hsd, pAdj });
+    }
+  }
+  return results;
+}
+
+/* =====================================================
+   IC 95%
+   ===================================================== */
+function runIC() {
+  const raw = document.getElementById('ic-data').value;
+  const data = raw.split(/[\s,;\n]+/).map(v => parseFloat(v)).filter(v => !isNaN(v));
+  const conf = parseFloat(document.getElementById('ic-confidence').value) || 95;
+  const sigmaKnown = parseFloat(document.getElementById('ic-sigma').value);
+  const resultsEl = document.getElementById('ic-results');
+
+  if (data.length < 2) {
+    resultsEl.innerHTML = `<div class="error-box"><i data-lucide="alert-circle" style="width:16px;height:16px;flex-shrink:0;"></i>Insira pelo menos 2 valores.</div>`;
+    lucide.createIcons();
+    return;
+  }
+
+  const n = data.length;
+  const m = mean(data);
+  const s = std(data);
+  const se = (isNaN(sigmaKnown) ? s : sigmaKnown) / Math.sqrt(n);
+  const alpha = 1 - conf / 100;
+  const useZ = !isNaN(sigmaKnown) || n >= 30;
+  const crit = useZ ? zCrit(alpha) : tInv(alpha, n - 1);
+  const margin = crit * se;
+  const lower = m - margin;
+  const upper = m + margin;
+
+  const pctFill = Math.min(((upper - lower) / (2 * s + 1e-10)) * 60, 100);
+
+  resultsEl.innerHTML = `
+    <div>
+      <div class="result-card highlight" style="margin-bottom:12px;">
+        <h3 style="font-size:13px;font-weight:600;margin:0 0 14px 0;">IC ${conf}% para a Média</h3>
+        <div style="background:var(--surface2);border-radius:8px;padding:14px;text-align:center;margin-bottom:12px;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Intervalo de Confiança</div>
+          <div style="font-family:'JetBrains Mono';font-size:20px;font-weight:700;">
+            [<span style="color:var(--accent);">${fmt(lower, 4)}</span>, <span style="color:var(--accent4);">${fmt(upper, 4)}</span>]
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">
+            ${m.toFixed(4)} ± ${margin.toFixed(4)} (${useZ ? 'Z' : 't'}-distribuição)
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="val">${fmt(m, 4)}</div><div class="lbl">Média (x̄)</div></div>
+          <div class="stat-box"><div class="val">${fmt(s, 4)}</div><div class="lbl">Desvio padrão</div></div>
+          <div class="stat-box"><div class="val">${fmt(se, 4)}</div><div class="lbl">Erro padrão</div></div>
+          <div class="stat-box"><div class="val">${n}</div><div class="lbl">n</div></div>
+          <div class="stat-box"><div class="val">${fmt(crit, 4)}</div><div class="lbl">${useZ ? 'z*' : 't*'} crítico</div></div>
+          <div class="stat-box"><div class="val">${fmt(margin, 4)}</div><div class="lbl">Margem</div></div>
+        </div>
+      </div>
+      <div class="result-card" style="font-size:12px;color:var(--muted);line-height:1.8;">
+        <p style="margin:0 0 4px 0;font-weight:600;color:var(--text);">Interpretação</p>
+        Há ${conf}% de confiança de que a média populacional esteja entre 
+        <span style="color:var(--accent);">${fmt(lower, 4)}</span> e 
+        <span style="color:var(--accent4);">${fmt(upper, 4)}</span>.
+        <br>Distribuição usada: <strong style="color:var(--text);">${useZ ? 'Normal (Z)' : 't de Student (gl = ' + (n-1) + ')'}</strong>
+      </div>
+    </div>
+  `;
+  lucide.createIcons();
+}
+
+/* =====================================================
+   REGRESSION
+   ===================================================== */
+function runRegression() {
+  const parseArr = id => document.getElementById(id).value.split(/[\s,;\n]+/).map(v => parseFloat(v)).filter(v => !isNaN(v));
+  const X = parseArr('reg-x'), Y = parseArr('reg-y');
+  const resultsEl = document.getElementById('regression-results');
+  const tableEl = document.getElementById('regression-table-area');
+
+  if (X.length < 2 || X.length !== Y.length) {
+    resultsEl.innerHTML = `<div class="error-box"><i data-lucide="alert-circle" style="width:16px;height:16px;flex-shrink:0;"></i>X e Y devem ter o mesmo número de valores (mínimo 2).</div>`;
+    tableEl.innerHTML = '';
+    lucide.createIcons();
+    return;
+  }
+
+  const n = X.length;
+  const mx = mean(X), my = mean(Y);
+  const Sxy = X.reduce((s, xi, i) => s + (xi - mx) * (Y[i] - my), 0);
+  const Sxx = X.reduce((s, xi) => s + (xi - mx) ** 2, 0);
+  const b1 = Sxy / Sxx;
+  const b0 = my - b1 * mx;
+
+  const Yhat = X.map(xi => b0 + b1 * xi);
+  const SS_res = Y.reduce((s, yi, i) => s + (yi - Yhat[i]) ** 2, 0);
+  const SS_tot = Y.reduce((s, yi) => s + (yi - my) ** 2, 0);
+  const SS_reg = SS_tot - SS_res;
+  const R2 = SS_reg / SS_tot;
+  const R2adj = 1 - (1 - R2) * (n - 1) / (n - 2);
+  const MSres = SS_res / (n - 2);
+  const se_b1 = Math.sqrt(MSres / Sxx);
+  const se_b0 = Math.sqrt(MSres * (1 / n + mx * mx / Sxx));
+  const t_b1 = b1 / se_b1;
+  const t_b0 = b0 / se_b0;
+  const p_b1 = pFromT(Math.abs(t_b1), n - 2);
+  const p_b0 = pFromT(Math.abs(t_b0), n - 2);
+  const F_reg = SS_reg / MSres;
+  const p_F = pFromF(F_reg, 1, n - 2);
+  const tCrit = tInv(0.05, n - 2);
+  const ci_b1_l = b1 - tCrit * se_b1, ci_b1_u = b1 + tCrit * se_b1;
+  const ci_b0_l = b0 - tCrit * se_b0, ci_b0_u = b0 + tCrit * se_b0;
+
+  // Prediction
+  const xPred = parseFloat(document.getElementById('reg-predict').value);
+  let predHtml = '';
+  if (!isNaN(xPred)) {
+    const yPred = b0 + b1 * xPred;
+    const se_pred = Math.sqrt(MSres * (1 + 1/n + (xPred - mx)**2 / Sxx));
+    const pi_l = yPred - tCrit * se_pred, pi_u = yPred + tCrit * se_pred;
+    predHtml = `
+      <div class="result-card success" style="margin-top:12px;">
+        <h3 style="font-size:13px;font-weight:600;margin:0 0 10px 0;">Previsão para X = ${xPred}</h3>
+        <div style="text-align:center;padding:8px 0;">
+          <div style="font-size:32px;font-weight:800;font-family:'JetBrains Mono';color:var(--accent2);">Ŷ = ${fmt(yPred, 4)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">IP 95%: [${fmt(pi_l, 4)}, ${fmt(pi_u, 4)}]</div>
+        </div>
+      </div>
+    `;
+  }
+
+  const r = Math.sqrt(R2) * Math.sign(b1);
+  const rLabel = Math.abs(r) < 0.3 ? 'fraca' : Math.abs(r) < 0.7 ? 'moderada' : 'forte';
+
+  resultsEl.innerHTML = `
+    <div>
+      <div class="result-card highlight">
+        <h3 style="font-size:13px;font-weight:600;margin:0 0 12px 0;">Regressão Linear: Ŷ = β₀ + β₁X</h3>
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;margin-bottom:12px;">
+          <div style="font-family:'JetBrains Mono';font-size:16px;font-weight:700;">
+            Ŷ = <span style="color:var(--accent);">${fmt(b0, 4)}</span> + 
+            <span style="color:var(--accent4);">${fmt(b1, 4)}</span>X
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="val">${fmt(R2, 4)}</div><div class="lbl">R²</div></div>
+          <div class="stat-box"><div class="val">${fmt(R2adj, 4)}</div><div class="lbl">R² ajust.</div></div>
+          <div class="stat-box"><div class="val">${fmt(r, 4)}</div><div class="lbl">r (Pearson)</div></div>
+          <div class="stat-box"><div class="val" style="color:${p_F < 0.05 ? 'var(--accent2)' : 'var(--accent3)'};">${fmtP(p_F)}</div><div class="lbl">p (F-geral)</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;">Correlação <strong style="color:var(--text);">${rLabel}</strong> (${b1 >= 0 ? 'positiva' : 'negativa'})</div>
+      </div>
+      ${predHtml}
+    </div>
+  `;
+
+  tableEl.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
+      <!-- Coeficients table -->
+      <div class="result-card">
+        <h3 style="font-size:13px;font-weight:600;margin:0 0 12px 0;">Coeficientes e IC 95%</h3>
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead><tr><th>Coef.</th><th>Estim.</th><th>EP</th><th>t</th><th>p-valor</th><th>IC 95%</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>β₀ (interc.)</td>
+                <td>${fmt(b0, 4)}</td>
+                <td>${fmt(se_b0, 4)}</td>
+                <td>${fmt(t_b0, 3)}</td>
+                <td style="color:${p_b0 < 0.05 ? 'var(--accent2)' : 'var(--text)'};">${fmtP(p_b0)}</td>
+                <td style="font-size:11px;">[${fmt(ci_b0_l,3)}, ${fmt(ci_b0_u,3)}]</td>
+              </tr>
+              <tr>
+                <td>β₁ (inclin.)</td>
+                <td>${fmt(b1, 4)}</td>
+                <td>${fmt(se_b1, 4)}</td>
+                <td>${fmt(t_b1, 3)}</td>
+                <td style="color:${p_b1 < 0.05 ? 'var(--accent2)' : 'var(--text)'};">${fmtP(p_b1)}</td>
+                <td style="font-size:11px;">[${fmt(ci_b1_l,3)}, ${fmt(ci_b1_u,3)}]</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- ANOVA table -->
+      <div class="result-card">
+        <h3 style="font-size:13px;font-weight:600;margin:0 0 12px 0;">Tabela ANOVA (Regressão)</h3>
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead><tr><th>Fonte</th><th>SQ</th><th>gl</th><th>MQ</th><th>F</th><th>p</th></tr></thead>
+            <tbody>
+              <tr><td style="color:var(--accent);">Regressão</td><td>${fmt(SS_reg,4)}</td><td>1</td><td>${fmt(SS_reg,4)}</td><td style="font-weight:700;">${fmt(F_reg,4)}</td><td style="color:${p_F < 0.05 ? 'var(--accent2)' : 'var(--text)'};">${fmtP(p_F)}</td></tr>
+              <tr><td style="color:var(--muted);">Resíduo</td><td>${fmt(SS_res,4)}</td><td>${n-2}</td><td>${fmt(MSres,4)}</td><td>—</td><td>—</td></tr>
+              <tr><td style="font-weight:600;">Total</td><td>${fmt(SS_tot,4)}</td><td>${n-1}</td><td>—</td><td>—</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- Residuals -->
+    <div class="result-card" style="margin-top:14px;">
+      <h3 style="font-size:13px;font-weight:600;margin:0 0 12px 0;">Tabela de Resíduos</h3>
+      <div style="overflow-x:auto;max-height:200px;overflow-y:auto;">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>X</th><th>Y obs.</th><th>Ŷ pred.</th><th>Resíduo</th><th>Resíduo padron.</th></tr></thead>
+          <tbody>
+            ${X.map((xi, i) => {
+              const res = Y[i] - Yhat[i];
+              const stdRes = res / Math.sqrt(MSres);
+              return `<tr>
+                <td style="color:var(--muted);">${i+1}</td>
+                <td>${fmt(xi,3)}</td>
+                <td>${fmt(Y[i],3)}</td>
+                <td style="color:var(--accent4);">${fmt(Yhat[i],4)}</td>
+                <td style="color:${Math.abs(res) > 2*Math.sqrt(MSres) ? 'var(--accent3)' : 'var(--text)'};">${fmt(res,4)}</td>
+                <td style="color:${Math.abs(stdRes) > 2 ? 'var(--accent3)' : 'var(--text)'};">${fmt(stdRes,4)}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  lucide.createIcons();
+}
+
+/* =====================================================
+   TAB SWITCHING
+   ===================================================== */
+function switchTab(name) {
+  ['dashboard', 'instagram', 'geral', 'anova', 'ic', 'regression', 'manual'].forEach(t => {
+    document.getElementById(`panel-${t}`).style.display = t === name ? 'block' : 'none';
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === name);
+  });
+}
+
+/* INSTAGRAM & GENERAL ANALYSIS */
+let instagramData = [];
+let instagramCharts = [];
+let geralCharts = [];
+
+function addInstagramRecord() {
+  const curtidas = parseFloat(document.getElementById('ig-curtidas').value) || 0;
+  const comentarios = parseFloat(document.getElementById('ig-comentarios').value) || 0;
+  const comp = parseFloat(document.getElementById('ig-comp').value) || 0;
+  const salvos = parseFloat(document.getElementById('ig-salvos').value) || 0;
+  const alcance = parseFloat(document.getElementById('ig-alcance').value) || 0;
+  if (alcance <= 0) { showToast('⚠️ Alcance > 0', 'warning'); return; }
+  instagramData.push({ id: Date.now(), tipo: document.getElementById('ig-tipo').value, tema: document.getElementById('ig-tema').value, dispositivo: document.getElementById('ig-dispositivo').value, curtidas, comentarios, comp, salvos, alcance });
+  localStorage.setItem('instagram_dados', JSON.stringify(instagramData));
+  document.getElementById('ig-curtidas').value = '';
+  document.getElementById('ig-comentarios').value = '';
+  document.getElementById('ig-comp').value = '';
+  document.getElementById('ig-salvos').value = '';
+  document.getElementById('ig-alcance').value = '';
+  showToast('✓ Post adicionado!');
+  updateInstagram();
+}
+
+function loadSampleInstagram() {
+  instagramData = [
+    { id: 1, tipo: 'Reel', tema: 'IST', dispositivo: 'Mobile', curtidas: 150, comentarios: 23, comp: 45, salvos: 80, alcance: 2500 },
+    { id: 2, tipo: 'Carrossel', tema: 'Prevenção', dispositivo: 'Mobile', curtidas: 200, comentarios: 35, comp: 60, salvos: 110, alcance: 3200 },
+    { id: 3, tipo: 'Story', tema: 'Autocuidado', dispositivo: 'Mobile', curtidas: 120, comentarios: 18, comp: 30, salvos: 65, alcance: 1800 },
+    { id: 4, tipo: 'Estático', tema: 'Reprodutiva', dispositivo: 'Desktop', curtidas: 180, comentarios: 28, comp: 50, salvos: 95, alcance: 2800 },
+    { id: 5, tipo: 'Reel', tema: 'Educação', dispositivo: 'Mobile', curtidas: 220, comentarios: 42, comp: 75, salvos: 130, alcance: 3600 },
+  ];
+  localStorage.setItem('instagram_dados', JSON.stringify(instagramData));
+  showToast('✓ Exemplo carregado!');
+  updateInstagram();
+}
+
+function updateInstagram() {
+  if (!instagramData.length) {
+    document.getElementById('ig-media-stat').textContent = '-';
+    document.getElementById('ig-count-stat').textContent = '0';
+    return;
+  }
+  const eng = instagramData.map(d => ((d.curtidas + d.comentarios + d.comp + d.salvos) / d.alcance) * 100);
+  const m = eng.reduce((a,b)=>a+b,0) / eng.length;
+  document.getElementById('ig-media-stat').textContent = m.toFixed(2) + '%';
+  document.getElementById('ig-count-stat').textContent = instagramData.length;
+  document.getElementById('ig-melhor-stat').textContent = Math.max(...eng).toFixed(2) + '%';
+  document.getElementById('ig-pior-stat').textContent = Math.min(...eng).toFixed(2) + '%';
+  instagramCharts.forEach(c => c.destroy());
+  instagramCharts = [];
+  
+  const ctx1 = document.getElementById('ig-chart-engagement').getContext('2d');
+  instagramCharts.push(new Chart(ctx1, { type: 'line', data: { labels: instagramData.map((_,i)=>'P'+(i+1)), datasets: [{ label: 'Engajamento (%)', data: eng, borderColor: '#E1306C', backgroundColor: 'rgba(225,48,108,.1)', tension: 0.4, fill: true }] }, options: { responsive: true, maintainAspectRatio: true } }));
+  
+  const tipos = [...new Set(instagramData.map(d => d.tipo))];
+  const medias = tipos.map(t => instagramData.filter(d=>d.tipo===t).map(d=>((d.curtidas+d.comentarios+d.comp+d.salvos)/d.alcance)*100).reduce((a,b)=>a+b,0) / instagramData.filter(d=>d.tipo===t).length);
+  const ctx2 = document.getElementById('ig-chart-by-type').getContext('2d');
+  instagramCharts.push(new Chart(ctx2, { type: 'bar', data: { labels: tipos, datasets: [{ label: 'Engaj. Médio (%)', data: medias, backgroundColor: '#E1306C' }] }, options: { responsive: true, maintainAspectRatio: true } }));
+  
+  const temas = [...new Set(instagramData.map(d=>d.tema))];
+  const ctx3 = document.getElementById('ig-chart-by-theme').getContext('2d');
+  instagramCharts.push(new Chart(ctx3, { type: 'doughnut', data: { labels: temas, datasets: [{ data: temas.map(t=>instagramData.filter(d=>d.tema===t).length), backgroundColor: ['#E1306C','#405DE6','#5B51D8','#833AB4','#FD1D1D'] }] }, options: { responsive: true, maintainAspectRatio: true } }));
+  
+  const tc = instagramData.reduce((s,d)=>s+d.curtidas,0), tco = instagramData.reduce((s,d)=>s+d.comentarios,0), tcp = instagramData.reduce((s,d)=>s+d.comp,0), ts = instagramData.reduce((s,d)=>s+d.salvos,0);
+  const ctx4 = document.getElementById('ig-chart-interactions').getContext('2d');
+  instagramCharts.push(new Chart(ctx4, { type: 'radar', data: { labels: ['Curtidas','Comentários','Compartilhamentos','Salvos'], datasets: [{ data: [tc,tco,tcp,ts], borderColor: '#E1306C', backgroundColor: 'rgba(225,48,108,.2)', pointBackgroundColor: '#E1306C' }] }, options: { responsive: true, maintainAspectRatio: true, scales: { r: { beginAtZero: true } } } }));
+}
+
+function generateGeralAnalysis() {
+  const all = [...pibicData, ...instagramData];
+  if (!all.length) { showToast('⚠️ Sem dados', 'warning'); return; }
+  const get = (d) => d.alcance ? ((d.curtidas + (d.comentarios||0) + (d.comp||0) + (d.salvos||0)) / d.alcance) * 100 : 0;
+  const eng = all.map(get);
+  const m = eng.reduce((a,b)=>a+b,0) / eng.length;
+  const ti = all.reduce((s,d)=>s+(d.curtidas||0)+(d.comentarios||0)+(d.comp||0)+(d.salvos||0),0);
+  const ta = all.reduce((s,d)=>s+(d.alcance||0),0);
+  document.getElementById('geral-total').textContent = all.length;
+  document.getElementById('geral-media').textContent = m.toFixed(2) + '%';
+  document.getElementById('geral-total-int').textContent = ti.toLocaleString();
+  document.getElementById('geral-total-alcance').textContent = ta.toLocaleString();
+  geralCharts.forEach(c=>c.destroy());
+  geralCharts = [];
+  const fontes = [...new Set(all.map(d=>d.tipo||'Dashboard'))];
+  const engf = fontes.map(f => { const fil = all.filter(d=>(d.tipo||'Dashboard')===f).map(get); return fil.reduce((a,b)=>a+b,0)/fil.length; });
+  const ctx1 = document.getElementById('geral-chart-main').getContext('2d');
+  geralCharts.push(new Chart(ctx1, { type: 'bar', data: { labels: fontes, datasets: [{ label: 'Engajamento (%)', data: engf, backgroundColor: ['#58a6ff','#3fb950','#f78166','#d2a8ff'] }] }, options: { responsive: true, maintainAspectRatio: true } }));
+  const sc = fontes.map(f=>all.filter(d=>(d.tipo||'Dashboard')===f).length);
+  const ctx2 = document.getElementById('geral-chart-sources').getContext('2d');
+  geralCharts.push(new Chart(ctx2, { type: 'doughnut', data: { labels: fontes, datasets: [{ data: sc, backgroundColor: ['#58a6ff','#3fb950','#f78166','#d2a8ff','#ffa657'] }] }, options: { responsive: true, maintainAspectRatio: true } }));
+  const ctx3 = document.getElementById('geral-chart-timeline').getContext('2d');
+  geralCharts.push(new Chart(ctx3, { type: 'line', data: { labels: all.map((_,i)=>'#'+(i+1)), datasets: [{ label: 'Engajamento (%)', data: eng, borderColor: '#d2a8ff', backgroundColor: 'rgba(210,168,255,.1)', tension: 0.4, fill: true }] }, options: { responsive: true, maintainAspectRatio: true } }));
+  const sorted = [...eng].sort((a,b)=>a-b);
+  const ctx4 = document.getElementById('geral-chart-distribution').getContext('2d');
+  geralCharts.push(new Chart(ctx4, { type: 'line', data: { labels: sorted.map((_,i)=>i+1), datasets: [{ label: 'Distribuição', data: sorted, borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,.1)', tension: 0.4, fill: true }] }, options: { responsive: true, maintainAspectRatio: true } }));
+  const std = Math.sqrt(eng.reduce((s,v)=>s+(v-m)**2,0)/(eng.length-1));
+  const med = sorted.length%2 ? sorted[Math.floor(sorted.length/2)] : (sorted[sorted.length/2-1]+sorted[sorted.length/2])/2;
+  const summary = `ANÁLISE CONSOLIDADA\nTotal: ${all.length} posts\nEngajamento: ${m.toFixed(2)}% ± ${std.toFixed(2)}\nMediana: ${med.toFixed(2)}%\nAlcance Total: ${ta.toLocaleString()}\nInterações: ${ti.toLocaleString()}\n${m<2?'🔴 Engajamento baixo':'m<5?🟡 Moderado':'🟢 Excelente'}`;
+  document.getElementById('geral-summary').textContent = summary;
+}
+
+/* INIT */
+defaultGroups.forEach(g => addGroup(g.name, g.data));
+runAnova();
+let pibicData = JSON.parse(localStorage.getItem("pibic_dados") || "[]");
+instagramData = JSON.parse(localStorage.getItem("instagram_dados") || "[]");
+let dashboardCharts = [];
+
+/* =====================================================
+   INIT
+   ===================================================== */
+// Add default groups
+defaultGroups.forEach(g => addGroup(g.name, g.data));
+
+// Run ANOVA on load
+runAnova();
+
+// Dashboard data (from localStorage)
+let pibicData = JSON.parse(localStorage.getItem("pibic_dados") || "[]");
+let dashboardCharts = [];
+
+function showToast(msg, type = 'success') {
+  const toast = document.createElement('div');
+  toast.style.cssText = `position:fixed;bottom:20px;right:20px;padding:12px 16px;border-radius:8px;font-size:12px;color:white;z-index:1001;animation:slideIn 0.3s ease;${type === 'error' ? 'background:#ef4444' : type === 'warning' ? 'background:#f59e0b' : 'background:#10b981'}`;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+function addPibicRecord() {
+  // Get values with stricter parsing
+  const curtidas = document.getElementById('curtidas').value.trim() ? parseFloat(document.getElementById('curtidas').value) : 0;
+  const comentarios = document.getElementById('comentarios').value.trim() ? parseFloat(document.getElementById('comentarios').value) : 0;
+  const comp = document.getElementById('comp').value.trim() ? parseFloat(document.getElementById('comp').value) : 0;
+  const salvos = document.getElementById('salvos').value.trim() ? parseFloat(document.getElementById('salvos').value) : 0;
+  const visualizacoes = document.getElementById('visualizacoes').value.trim() ? parseFloat(document.getElementById('visualizacoes').value) : 0;
+  const impressoes = document.getElementById('impressoes').value.trim() ? parseFloat(document.getElementById('impressoes').value) : 0;
+  const alcance = document.getElementById('alcance').value.trim() ? parseFloat(document.getElementById('alcance').value) : 0;
+  
+  const tipo = document.getElementById('tipo').value || 'Reel';
+  const tema = document.getElementById('tema').value || 'IST';
+  const dispositivo = document.getElementById('dispositivo').value || 'Todos';
+  
+  // Validation: must have valid numbers for key fields
+  if (isNaN(curtidas) || isNaN(comentarios) || isNaN(alcance)) {
+    showToast('⚠️ Verifique os números digitados', 'warning');
+    return;
+  }
+  
+  // Must have at least one metric filled
+  const totalMetricas = curtidas + comentarios + comp + salvos + visualizacoes + impressoes;
+  if (totalMetricas === 0) {
+    showToast('⚠️ Preencha pelo menos uma métrica', 'warning');
+    return;
+  }
+  
+  // Must have alcance
+  if (alcance <= 0) {
+    showToast('⚠️ Alcance deve ser maior que 0', 'warning');
+    return;
+  }
+  
+  const novoRegistro = { 
+    id: Date.now(),
+    tipo, 
+    tema, 
+    dispositivo, 
+    curtidas: isNaN(curtidas) ? 0 : curtidas,
+    comentarios: isNaN(comentarios) ? 0 : comentarios,
+    comp: isNaN(comp) ? 0 : comp,
+    salvos: isNaN(salvos) ? 0 : salvos,
+    visualizacoes: isNaN(visualizacoes) ? 0 : visualizacoes,
+    impressoes: isNaN(impressoes) ? 0 : impressoes,
+    alcance: isNaN(alcance) ? 1 : alcance
+  };
+  
+  pibicData.push(novoRegistro);
+  localStorage.setItem('pibic_dados', JSON.stringify(pibicData));
+  
+  // Clear all inputs
+  document.getElementById('curtidas').value = '';
+  document.getElementById('comentarios').value = '';
+  document.getElementById('comp').value = '';
+  document.getElementById('salvos').value = '';
+  document.getElementById('visualizacoes').value = '';
+  document.getElementById('impressoes').value = '';
+  document.getElementById('alcance').value = '';
+  
+  showToast('✓ Registro adicionado!');
+  updateDashboard();
+
+// Init element SDK
+}
+
+function calcEngage(d) {
+  return d.alcance ? ((d.curtidas + d.comentarios + d.comp + d.salvos) / d.alcance) * 100 : 0;
+}
+
+function calcTaxaVisualizacao(d) {
+  return d.impressoes ? (d.visualizacoes / d.impressoes) * 100 : 0;
+}
+
+function updateDashboard() {
+  const engagements = pibicData.map(calcEngage);
+  if (engagements.length === 0) {
+    document.getElementById('mean-stat').textContent = '-';
+    document.getElementById('std-stat').textContent = '-';
+    document.getElementById('cv-stat').textContent = '-';
+    document.getElementById('median-stat').textContent = '-';
+    document.getElementById('total-records').textContent = '0';
+    return;
+  }
+  
+  const n = engagements.length;
+  const m = engagements.reduce((s, v) => s + v, 0) / n;
+  const s = Math.sqrt(engagements.reduce((s, v) => s + (v - m) ** 2, 0) / (n - 1 || 1));
+  const cv = m ? (s / m) * 100 : 0;
+  const sorted = [...engagements].sort((a, b) => a - b);
+  const med = sorted.length % 2 ? sorted[Math.floor(sorted.length / 2)] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
+  
+  // Quartiles
+  const q1Idx = Math.floor(n * 0.25);
+  const q3Idx = Math.floor(n * 0.75);
+  const q1 = sorted[q1Idx] || sorted[0];
+  const q3 = sorted[q3Idx] || sorted[n - 1];
+  
+  // IC 95%
+  const se = s / Math.sqrt(n);
+  const tCrit = 1.96; // approximate for n > 30
+  const icMargin = tCrit * se;
+  const icLower = m - icMargin;
+  const icUpper = m + icMargin;
+  
+  // Linear regression (post index vs engagement)
+  const indices = pibicData.map((_, i) => i + 1);
+  const sx = indices.reduce((a, b) => a + b, 0);
+  const sy = engagements.reduce((a, b) => a + b, 0);
+  const sxy = indices.reduce((sum, xi, i) => sum + xi * engagements[i], 0);
+  const sx2 = indices.reduce((sum, xi) => sum + xi * xi, 0);
+  const regSlope = (n * sxy - sx * sy) / (n * sx2 - sx * sx);
+  const regIntercept = (sy - regSlope * sx) / n;
+  
+  document.getElementById('mean-stat').textContent = m.toFixed(2) + '%';
+  document.getElementById('std-stat').textContent = s.toFixed(2);
+  document.getElementById('cv-stat').textContent = cv.toFixed(2) + '%';
+  document.getElementById('median-stat').textContent = med.toFixed(2) + '%';
+  document.getElementById('total-records').textContent = pibicData.length;
+  
+  // Update charts
+  dashboardCharts.forEach(c => c.destroy());
+  dashboardCharts = [];
+  
+  const ctx1 = document.getElementById('chart-engagement').getContext('2d');
+  const chart1 = new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels: pibicData.map((_, i) => 'Post ' + (i + 1)),
+      datasets: [{
+        label: 'Engajamento (%)',
+        data: engagements,
+        backgroundColor: '#58a6ff',
+        borderRadius: 6
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: true, indexAxis: undefined }
+  });
+  dashboardCharts.push(chart1);
+  
+  const tipos = [...new Set(pibicData.map(d => d.tipo))];
+  const medias = tipos.map(t => pibicData.filter(d => d.tipo === t).map(calcEngage).reduce((s, v) => s + v, 0) / pibicData.filter(d => d.tipo === t).length);
+  
+  const ctx2 = document.getElementById('chart-by-type').getContext('2d');
+  const chart2 = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: tipos,
+      datasets: [{
+        label: 'Média por Tipo',
+        data: medias,
+        backgroundColor: '#8b5cf6',
+        borderRadius: 6
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: true }
+  });
+  dashboardCharts.push(chart2);
+  
+  // Chart by theme
+  const temas = [...new Set(pibicData.map(d => d.tema))];
+  const mediasTemas = temas.map(t => pibicData.filter(d => d.tema === t).map(calcEngage).reduce((s, v) => s + v, 0) / pibicData.filter(d => d.tema === t).length);
+  const colors = ['#58a6ff', '#3fb950', '#f78166', '#d2a8ff', '#ffa657'];
+  const temaBgColors = temas.map((_, i) => colors[i % colors.length]);
+  
+  const ctx3 = document.getElementById('chart-by-theme').getContext('2d');
+  const chart3 = new Chart(ctx3, {
+    type: 'doughnut',
+    data: {
+      labels: temas,
+      datasets: [{
+        label: 'Engajamento por Tema',
+        data: temas.map(t => pibicData.filter(d => d.tema === t).length),
+        backgroundColor: temaBgColors,
+        borderColor: '#161b22',
+        borderWidth: 2
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: true }
+  });
+  dashboardCharts.push(chart3);
+
+  // Interactions breakdown
+  const totalCurtidas = pibicData.reduce((s, d) => s + d.curtidas, 0);
+  const totalComentarios = pibicData.reduce((s, d) => s + d.comentarios, 0);
+  const totalCompartilhamentos = pibicData.reduce((s, d) => s + d.comp, 0);
+  const totalSalvos = pibicData.reduce((s, d) => s + d.salvos, 0);
+
+  const ctx4 = document.getElementById('chart-interactions').getContext('2d');
+  const chart4 = new Chart(ctx4, {
+    type: 'bar',
+    data: {
+      labels: ['Curtidas', 'Comentários', 'Compartilhamentos', 'Salvos'],
+      datasets: [{
+        label: 'Total de Interações',
+        data: [totalCurtidas, totalComentarios, totalCompartilhamentos, totalSalvos],
+        backgroundColor: ['#58a6ff', '#3fb950', '#f78166', '#d2a8ff'],
+        borderRadius: 6
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: true, indexAxis: undefined }
+  });
+  dashboardCharts.push(chart4);
+
+  // By device
+  const dispositivos = [...new Set(pibicData.map(d => d.dispositivo))];
+  const mediasByDevice = dispositivos.map(dev => {
+    const filtered = pibicData.filter(d => d.dispositivo === dev);
+    return filtered.reduce((s, v) => s + calcEngage(v), 0) / filtered.length;
+  });
+
+  const ctx5 = document.getElementById('chart-device').getContext('2d');
+  const chart5 = new Chart(ctx5, {
+    type: 'radar',
+    data: {
+      labels: dispositivos,
+      datasets: [{
+        label: 'Engajamento por Dispositivo (%)',
+        data: mediasByDevice,
+        backgroundColor: 'rgba(88, 166, 255, 0.2)',
+        borderColor: '#58a6ff',
+        pointBackgroundColor: '#58a6ff',
+        pointBorderColor: '#0d1117',
+        pointBorderWidth: 2
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: true, scales: { r: { beginAtZero: true } } }
+  });
+  dashboardCharts.push(chart5);
+
+  // Views vs Impressions
+  const taxasVisu = pibicData.map(calcTaxaVisualizacao);
+  const ctx6 = document.getElementById('chart-views').getContext('2d');
+  const chart6 = new Chart(ctx6, {
+    type: 'line',
+    data: {
+      labels: pibicData.map((_, i) => 'Post ' + (i + 1)),
+      datasets: [{
+        label: 'Taxa de Visualização (%)',
+        data: taxasVisu,
+        borderColor: '#ffa657',
+        backgroundColor: 'rgba(255, 166, 87, 0.1)',
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: '#ffa657',
+        pointBorderColor: '#0d1117',
+        pointBorderWidth: 2,
+        pointRadius: 4
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: true }
+  });
+  dashboardCharts.push(chart6);
+  
+  const ic = intervaloConfiancaAvancado(engagements);
+  const reg = regressaoSimples(indices, engagements);
+  
+  const result = `ANÁLISE DESCRITIVA
+
+Engajamento (%)
+Min: ${Math.min(...engagements).toFixed(2)}%
+Q1: ${q1.toFixed(2)}%
+Mediana: ${med.toFixed(2)}%
+Q3: ${q3.toFixed(2)}%
+Max: ${Math.max(...engagements).toFixed(2)}%
+
+Resumo Estatístico
+Média: ${m.toFixed(2)}%
+Desvio Padrão: ${s.toFixed(2)}
+CV: ${cv.toFixed(2)}%
+
+Intervalo de Confiança (95%)
+${ic.inferior.toFixed(2)}% - ${ic.superior.toFixed(2)}%
+
+Regressão Linear
+y = ${reg.b0.toFixed(2)} + ${reg.b1.toFixed(2)}x
+R² = ${reg.r2.toFixed(4)}
+
+${gerarTextoCientifico({ media: m, dp: s, cv: cv, icInf: ic.inferior, icSup: ic.superior, r2: reg.r2 })}`;
+  
+  document.getElementById('dashboard-result').textContent = result;
+
+  // Add article button
+  const resultEl = document.getElementById('dashboard-result');
+  resultEl.parentElement.insertAdjacentHTML('afterend', `
+    <button class="btn-primary" onclick="gerarArtigo()" 
+      style="width:100%;margin-top:12px;background:linear-gradient(135deg,#22c55e,#16a34a);display:flex;align-items:center;justify-content:center;gap:6px;">
+      <i data-lucide="file-text" style="width:14px;height:14px;"></i> Gerar Artigo Científico
+    </button>
+  `);
+  lucide.createIcons();
+}
+}
+
+
+
+function exportarPDF() {
+  if (!pibicData.length) {
+    showToast('Adicione dados primeiro', 'warning');
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const engagements = pibicData.map(calcEngage);
+  const m = engagements.reduce((s, v) => s + v, 0) / engagements.length;
+  const s = Math.sqrt(engagements.reduce((s, v) => s + (v - m) ** 2, 0) / (engagements.length - 1));
+  doc.text('ANÁLISE PIBIC - Engajamento Digital', 105, 20, { align: 'center' });
+  doc.setFontSize(11);
+  doc.text(`Média: ${m.toFixed(2)}% | DP: ${s.toFixed(2)} | N: ${pibicData.length}`, 15, 35);
+  doc.save('relatorio_pibic.pdf');
+  showToast('✓ PDF gerado');
+}
+
+function exportarPDFDashboard() {
+  if (!pibicData.length) {
+    showToast('Gere análise primeiro', 'warning');
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  let yPos = 15;
+
+  // Title
+  doc.setFontSize(16);
+  doc.text('Lab Científico PIBIC PRO - Relatório Completo', pageWidth / 2, yPos, { align: 'center' });
+  yPos += 12;
+
+  // Date
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, pageWidth / 2, yPos, { align: 'center' });
+  doc.setTextColor(0);
+  yPos += 12;
+
+  // Summary stats
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.text('Resumo Estatístico', 15, yPos);
+  yPos += 8;
+
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+  
+  const engagements = pibicData.map(calcEngage);
+  const m = engagements.reduce((s, v) => s + v, 0) / engagements.length;
+  const s = Math.sqrt(engagements.reduce((s, v) => s + (v - m) ** 2, 0) / (engagements.length - 1));
+  const cv = m ? (s / m) * 100 : 0;
+  const sorted = [...engagements].sort((a, b) => a - b);
+  const med = sorted.length % 2 ? sorted[Math.floor(sorted.length / 2)] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
+
+  const statsText = [
+    `Total de registros: ${pibicData.length}`,
+    `Engajamento médio: ${m.toFixed(2)}%`,
+    `Desvio padrão: ${s.toFixed(2)}`,
+    `Coeficiente de variação: ${cv.toFixed(2)}%`,
+    `Mediana: ${med.toFixed(2)}%`,
+    `Mínimo: ${Math.min(...engagements).toFixed(2)}%`,
+    `Máximo: ${Math.max(...engagements).toFixed(2)}%`
+  ];
+
+  statsText.forEach(text => {
+    doc.text(text, 15, yPos);
+    yPos += 6;
+  });
+
+  yPos += 6;
+
+  // Data table
+  if (yPos > pageHeight - 40) {
+    doc.addPage();
+    yPos = 15;
+  }
+
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.text('Dados Registrados', 15, yPos);
+  yPos += 8;
+
+  doc.setFontSize(9);
+  doc.setFont(undefined, 'normal');
+
+  const headers = ['Tipo', 'Tema', 'Dispos.', 'Curt.', 'Com.', 'Comp.', 'Salv.', 'Vis.', 'Imp.', 'Alc.', 'Eng(%)'];
+  const rows = pibicData.map((d, i) => [
+    d.tipo.substring(0, 5),
+    d.tema.substring(0, 4),
+    d.dispositivo.substring(0, 4),
+    d.curtidas.toString(),
+    d.comentarios.toString(),
+    d.comp.toString(),
+    d.salvos.toString(),
+    d.visualizacoes.toString(),
+    d.impressoes.toString(),
+    d.alcance.toString(),
+    calcEngage(d).toFixed(1)
+  ]);
+
+  doc.autoTable({
+    head: [headers],
+    body: rows,
+    startY: yPos,
+    margin: 15,
+    fontSize: 8,
+    theme: 'grid'
+  });
+
+  doc.save('lab-pibic-relatorio-completo.pdf');
+  showToast('✓ Relatório PDF gerado');
+}
+
+function exportarExcel() {
+  if (!pibicData.length) {
+    showToast('Adicione dados primeiro', 'warning');
+    return;
+  }
+  
+  const ws_data = [['Tipo', 'Tema', 'Dispositivo', 'Curtidas', 'Comentários', 'Compartilhamentos', 'Salvos', 'Visualizações', 'Impressões', 'Alcance', 'Engajamento(%)']];
+  
+  pibicData.forEach(d => {
+    ws_data.push([
+      d.tipo,
+      d.tema,
+      d.dispositivo,
+      d.curtidas,
+      d.comentarios,
+      d.comp,
+      d.salvos,
+      d.visualizacoes,
+      d.impressoes,
+      d.alcance,
+      calcEngage(d).toFixed(2)
+    ]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Dados PIBIC');
+  XLSX.writeFile(wb, 'dados_pibic.xlsx');
+  showToast('✓ Excel exportado');
+}
+
+function exportarExcelDashboard() {
+  if (!pibicData.length) {
+    showToast('Gere análise primeiro', 'warning');
+    return;
+  }
+
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: Dados
+  const ws_data = [['Tipo', 'Tema', 'Dispositivo', 'Curtidas', 'Comentários', 'Compartilhamentos', 'Salvos', 'Visualizações', 'Impressões', 'Alcance', 'Engajamento(%)']];
+  pibicData.forEach(d => {
+    ws_data.push([
+      d.tipo, d.tema, d.dispositivo, d.curtidas, d.comentarios, d.comp, d.salvos, d.visualizacoes, d.impressoes, d.alcance, calcEngage(d).toFixed(2)
+    ]);
+  });
+  const ws1 = XLSX.utils.aoa_to_sheet(ws_data);
+  XLSX.utils.book_append_sheet(wb, ws1, 'Dados');
+
+  // Sheet 2: Estatísticas
+  const engagements = pibicData.map(calcEngage);
+  const m = engagements.reduce((s, v) => s + v, 0) / engagements.length;
+  const s = Math.sqrt(engagements.reduce((s, v) => s + (v - m) ** 2, 0) / (engagements.length - 1));
+  const cv = m ? (s / m) * 100 : 0;
+  const sorted = [...engagements].sort((a, b) => a - b);
+  const med = sorted.length % 2 ? sorted[Math.floor(sorted.length / 2)] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
+
+  const ws_stats = [
+    ['Estatística', 'Valor'],
+    ['Total de Registros', pibicData.length],
+    ['Engajamento Médio (%)', m.toFixed(4)],
+    ['Desvio Padrão', s.toFixed(4)],
+    ['Coeficiente de Variação (%)', cv.toFixed(4)],
+    ['Mediana', med.toFixed(4)],
+    ['Mínimo', Math.min(...engagements).toFixed(4)],
+    ['Máximo', Math.max(...engagements).toFixed(4)],
+    ['Q1', sorted[Math.floor(engagements.length * 0.25)].toFixed(4)],
+    ['Q3', sorted[Math.floor(engagements.length * 0.75)].toFixed(4)]
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(ws_stats);
+  XLSX.utils.book_append_sheet(wb, ws2, 'Estatísticas');
+
+  // Sheet 3: Por Tipo
+  const tipos = [...new Set(pibicData.map(d => d.tipo))];
+  const ws_tipo = [['Tipo', 'Frequência', 'Engajamento Médio (%)']];
+  tipos.forEach(t => {
+    const filtered = pibicData.filter(d => d.tipo === t);
+    const avgEng = filtered.map(calcEngage).reduce((s, v) => s + v, 0) / filtered.length;
+    ws_tipo.push([t, filtered.length, avgEng.toFixed(4)]);
+  });
+  const ws3 = XLSX.utils.aoa_to_sheet(ws_tipo);
+  XLSX.utils.book_append_sheet(wb, ws3, 'Por Tipo');
+
+  // Sheet 4: Por Tema
+  const temas = [...new Set(pibicData.map(d => d.tema))];
+  const ws_tema = [['Tema', 'Frequência', 'Engajamento Médio (%)']];
+  temas.forEach(t => {
+    const filtered = pibicData.filter(d => d.tema === t);
+    const avgEng = filtered.map(calcEngage).reduce((s, v) => s + v, 0) / filtered.length;
+    ws_tema.push([t, filtered.length, avgEng.toFixed(4)]);
+  });
+  const ws4 = XLSX.utils.aoa_to_sheet(ws_tema);
+  XLSX.utils.book_append_sheet(wb, ws4, 'Por Tema');
+
+  // Sheet 5: Por Dispositivo
+  const dispositivos = [...new Set(pibicData.map(d => d.dispositivo))];
+  const ws_disp = [['Dispositivo', 'Frequência', 'Engajamento Médio (%)']];
+  dispositivos.forEach(d => {
+    const filtered = pibicData.filter(p => p.dispositivo === d);
+    const avgEng = filtered.map(calcEngage).reduce((s, v) => s + v, 0) / filtered.length;
+    ws_disp.push([d, filtered.length, avgEng.toFixed(4)]);
+  });
+  const ws5 = XLSX.utils.aoa_to_sheet(ws_disp);
+  XLSX.utils.book_append_sheet(wb, ws5, 'Por Dispositivo');
+
+  XLSX.writeFile(wb, 'lab-pibic-analise-completa.xlsx');
+  showToast('✓ Planilha Excel gerada');
+}
+
+function exportarCSV() {
+  if (!pibicData.length) {
+    showToast('Adicione dados primeiro', 'warning');
+    return;
+  }
+  let csv = 'Tipo,Tema,Dispositivo,Curtidas,Comentários,Compartilhamentos,Salvos,Visualizações,Impressões,Alcance,Engajamento(%)\n';
+  pibicData.forEach(d => csv += `${d.tipo},${d.tema},${d.dispositivo},${d.curtidas},${d.comentarios},${d.comp},${d.salvos},${d.visualizacoes},${d.impressoes},${d.alcance},${calcEngage(d).toFixed(2)}\n`);
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'dados_pibic.csv';
+  a.click();
+  showToast('✓ CSV exportado');
+}
+
+function downloadApp() {
+  const htmlContent = document.documentElement.outerHTML;
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Lab-Cientifico-PIBIC-PRO.html';
+  a.click();
+  showToast('✓ App baixado com sucesso');
+}
+
+async function downloadAppZIP() {
+  showToast('Preparando download...', 'warning');
+  
+  // Criar um mock de JSZip se não existir
+  if (!window.JSZip) {
+    // Fallback: baixar apenas o HTML
+    downloadApp();
+    showToast('⚠️ Baixando versão HTML (para versão ZIP, use um serviço externo)', 'warning');
+    return;
+  }
+
+  try {
+    const zip = new window.JSZip();
+    
+    // Arquivo principal HTML
+    const htmlContent = document.documentElement.outerHTML;
+    zip.file('index.html', htmlContent);
+    
+    // Manifest.json
+    const manifest = {
+      "name": "Lab Científico PIBIC PRO",
+      "short_name": "Lab PIBIC",
+      "description": "Análise estatística avançada para PIBIC",
+      "start_url": "./index.html",
+      "display": "standalone",
+      "scope": "./",
+      "background_color": "#0d1117",
+      "theme_color": "#58a6ff",
+      "orientation": "portrait-primary",
+      "icons": [
+        {"src": "icon-72.png", "sizes": "72x72", "type": "image/png", "purpose": "any"},
+        {"src": "icon-96.png", "sizes": "96x96", "type": "image/png", "purpose": "any"},
+        {"src": "icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any"},
+        {"src": "icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any"},
+        {"src": "icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any"},
+        {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+        {"src": "icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any"},
+        {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
+      ]
+    };
+    zip.file('manifest.json', JSON.stringify(manifest, null, 2));
+    
+    // Service Worker
+    const sw = `const CACHE_NAME = 'lab-pibic-v1';
+const urlsToCache = ['./index.html', './manifest.json'];
+
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
+});
+
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(response => response || fetch(event.request))
+  );
+});`;
+    zip.file('sw.js', sw);
+    
+    // README.md com instruções
+    const readme = `# Lab Científico PIBIC PRO + Statistical Suite
+
+Uma ferramenta completa de análise estatística para pesquisas PIBIC.
+
+## 📱 Instalação PWA
+
+### No seu computador:
+1. Abra \`index.html\` no navegador
+2. Clique no botão "Instalar" no header
+3. O app será instalado localmente
+
+### No GitHub Pages:
+1. Faça upload de todos os arquivos para seu repositório
+2. Ative GitHub Pages nas configurações
+3. Acesse a URL do seu site
+4. Instale como PWA
+
+## 📁 Arquivos necessários
+
+- \`index.html\` - Aplicação principal
+- \`manifest.json\` - Configuração PWA
+- \`sw.js\` - Service Worker para offline
+- \`icon-*.png\` - Ícones em diferentes resoluções (72px até 512px)
+
+## 🚀 Funcionalidades
+
+- Dashboard com gráficos em tempo real
+- ANOVA com teste de Tukey HSD
+- Intervalo de Confiança 95%
+- Regressão Linear
+- Exportação em PDF, Excel e CSV
+- Funciona offline
+- Instalável como app nativo
+
+## 💾 Dados
+
+Os dados são salvos automaticamente no navegador (localStorage).
+Para fazer backup, use o botão "Exportar".
+
+## 📚 Manual Estatístico
+
+Inclui guia completo com:
+- Conceitos básicos
+- Interpretação de resultados
+- Pressupostos estatísticos
+- Boas práticas
+
+---
+
+Desenvolvido para PIBIC - Pesquisa com Excelência Estatística`;
+    zip.file('README.md', readme);
+    
+    // INSTRUÇÕES.txt para usuários
+    const instrucoes = `╔════════════════════════════════════════════════════╗
+║  Lab Científico PIBIC PRO - Como Usar             ║
+╚════════════════════════════════════════════════════╝
+
+1. UPLOAD PARA GITHUB
+   - Crie um repositório novo
+   - Faça upload de TODOS os arquivos:
+     ✓ index.html
+     ✓ manifest.json
+     ✓ sw.js
+     ✓ icon-72.png até icon-512.png
+     ✓ README.md
+   
+   - Ative "GitHub Pages" nas configurações do repositório
+   - Acesse a URL gerada
+
+2. USAR LOCALMENTE
+   - Abra index.html com um navegador moderno
+   - Clique em "Instalar" para instalar como app
+
+3. ÍCONES
+   - Você precisa de 8 ícones PNG:
+     icon-72.png, icon-96.png, icon-128.png, icon-144.png,
+     icon-152.png, icon-192.png, icon-384.png, icon-512.png
+   
+   - Use ferramentas online para gerar:
+     https://www.favicon-generator.org/
+     https://www.icon-convert.com/
+
+4. DADOS
+   - Todos os dados são salvos no navegador automaticamente
+   - Exporte regularmente em PDF/Excel como backup
+
+5. OFFLINE
+   - Após instalar, funciona 100% offline
+   - Dados persistem entre atualizações
+
+Dúvidas? Verifique o Manual dentro do app!`;
+    zip.file('INSTRUÇÕES.txt', instrucoes);
+    
+    // Gerar ZIP
+    const content = await zip.generateAsync({type: 'blob'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(content);
+    link.download = 'Lab-Cientifico-PIBIC-PRO.zip';
+    link.click();
+    showToast('✓ App completo baixado!');
+  } catch (err) {
+    console.error('Erro ao criar ZIP:', err);
+    downloadApp();
+    showToast('⚠️ Baixando versão HTML (JSON ZIP não disponível)', 'warning');
+  }
+}
+
+updateDashboard();
+
+// Init element SDK
+window.elementSdk.init({
+  defaultConfig: {
+    app_title: 'Lab Científico PIBIC PRO + Stats',
+    input_label: 'Enter your data',
+    background_color: '#0d1117',
+    surface_color: '#161b22',
+    text_color: '#e6edf3',
+    accent_color: '#58a6ff',
+    font_family: 'Sora',
+    font_size: 14
+  },
+  onConfigChange: async (config) => {
+    const def = window.elementSdk.config;
+    const title = document.getElementById('app-title');
+    if (title) title.textContent = config.app_title || 'Lab Científico PIBIC PRO + Stats';
+    document.documentElement.style.setProperty('--bg', config.background_color || '#0d1117');
+    document.documentElement.style.setProperty('--surface', config.surface_color || '#161b22');
+    document.documentElement.style.setProperty('--text', config.text_color || '#e6edf3');
+    document.documentElement.style.setProperty('--accent', config.accent_color || '#58a6ff');
+    const ff = config.font_family || 'Sora';
+    const fs = config.font_size || 14;
+    document.body.style.fontFamily = `${ff}, sans-serif`;
+    document.body.style.fontSize = `${fs}px`;
+  },
+  mapToCapabilities: (config) => ({
+    recolorables: [
+      { get: () => config.background_color || '#0d1117', set: v => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+      { get: () => config.surface_color || '#161b22', set: v => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+      { get: () => config.text_color || '#e6edf3', set: v => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+      { get: () => config.accent_color || '#58a6ff', set: v => { config.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); } },
+    ],
+    borderables: [],
+    fontEditable: { get: () => config.font_family || 'Sora', set: v => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+    fontSizeable: { get: () => config.font_size || 14, set: v => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } },
+  }),
+  mapToEditPanelValues: (config) => new Map([
+    ['app_title', config.app_title || 'Lab Científico PIBIC PRO + Stats'],
+    ['input_label', config.input_label || 'Enter your data'],
+  ])
+});
+
+lucide.createIcons();
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e434f72128eb559',t:'MTc3NDgzMzgyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+  </html>
