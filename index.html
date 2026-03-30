@@ -3005,6 +3005,40 @@ function downloadFile(content, filename, mimeType) {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+     // --- CÓDIGO DO PWA COMEÇA AQUI ---
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js")
+        .then(reg => console.log("PWA Ativo!"))
+        .catch(err => console.log("Erro no PWA", err));
+    });
+  }
+
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const btn = document.getElementById('btn-install-app');
+    if(btn) btn.style.display = 'flex';
+    const notif = document.getElementById('install-notification');
+    if(notif) notif.style.display = 'block';
+  });
+
+  async function installApp() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        deferredPrompt = null;
+        document.getElementById('btn-install-app').style.display = 'none';
+        document.getElementById('install-notification').style.display = 'none';
+      }
+    } else {
+      alert("Clique nos 3 pontinhos do navegador e escolha 'Instalar App'.");
+    }
+  }
+  // --- CÓDIGO DO PWA TERMINA AQUI ---
+
 </script>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e43a032a61cc4da',t:'MTc3NDgzNzEyOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </html>
