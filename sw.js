@@ -1,42 +1,28 @@
-const CACHE_NAME = 'lab-pibic-cache-v1';
-const assetsToCache = [
+const CACHE_NAME = 'lab-pibic-v1';
+const assets = [
   './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
+  'index.html',
+  'manifest.json',
+  'Icons/icon-192.png',
+  'Icons/icon-512.png',
   'https://cdn.tailwindcss.com/3.4.17',
   'https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js'
 ];
 
-// Instalação: Salva arquivos essenciais
+// Instalação do Service Worker
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(assetsToCache);
+      return cache.addAll(assets);
     })
   );
 });
 
-// Ativação: Limpa lixo de versões antigas
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys => {
-      return Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-      );
-    })
-  );
-});
-
-// Busca: Serve o cache se estiver offline
+// Resposta do Cache (Permite funcionar offline)
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    }).catch(() => {
-      // Se não houver rede nem cache, retorna uma resposta básica
-      return new Response("Você está offline e este recurso não foi clonado.");
+    caches.match(event.request).then(cachedResponse => {
+      return cachedResponse || fetch(event.request);
     })
   );
 });
