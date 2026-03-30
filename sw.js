@@ -1,17 +1,22 @@
-const CACHE_NAME = "lab-pibic-v1";
-const urlsToCache = ["./", "./index.html", "./manifest.json"];
+const CACHE_NAME = 'lab-pibic-v2';
+const assets = [
+  './',
+  './index.html',
+  './manifest.json',
+  'https://cdn.tailwindcss.com/3.4.17'
+];
 
-self.addEventListener("install", (event) => {
+// Instala o cache
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(urlsToCache);
-    })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(assets))
   );
 });
 
-self.addEventListener("fetch", (event) => {
+// Responde offline
+self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then((response) => {
+    caches.match(event.request).then(response => {
       return response || fetch(event.request);
     })
   );
